@@ -1,5 +1,5 @@
-#ifndef SIMDSELECTOR_H
-#define SIMDSELECTOR_H
+#ifndef HASC_SIMDSELECTOR_H
+#define HASC_SIMDSELECTOR_H
 #include <cstddef>
 #include <vectorclass.h>
 
@@ -35,4 +35,4 @@ struct SIMDSelector<8>
 
 } // namespace hasc
 
-#endif // SIMDSELECTOR_H
+#endif // HASC_SIMDSELECTOR_H
