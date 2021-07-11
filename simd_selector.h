@@ -1,3 +1,7 @@
+/// @file simd_selector.h
+/// @brief Choose SIMD width at compile time
+/// @author Peter Bastian (Lecture 21)
+
 #ifndef HASC_SIMDSELECTOR_H
 #define HASC_SIMDSELECTOR_H
 #include <cstddef>

@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.12)
 project(hasc)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -10,6 +10,7 @@ find_package(benchmark CONFIG REQUIRED)
 find_package(OpenMP REQUIRED)
 #find_package(fmt CONFIG REQUIRED)
 find_package(vectorclass REQUIRED)
+#find_package(Catch2 CONFIG REQUIRED)
 
 # Define optimization levels
 set(OPT_VEC_REPORT OFF)
@@ -83,7 +84,7 @@ add_library(parallel INTERFACE simd_selector.h)
 target_link_libraries(parallel INTERFACE
     Threads::Threads OpenMP::OpenMP_CXX vectorclass::vectorclass)
 
-add_executable(main main.cpp lmv_sequential.h)
+add_executable(main main.cpp local_mean_value.h span.h aligned_array.h)
 target_link_libraries(main PRIVATE parallel)
 
 #target_compile_definitions(jacobi_msg PRIVATE PRINT_RESULT)
