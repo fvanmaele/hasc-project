@@ -80,11 +80,11 @@ endif()
 
 # Project
 
-add_library(parallel INTERFACE simd_selector.h)
+add_library(parallel INTERFACE simd_selector.h span.h aligned_array.h)
 target_link_libraries(parallel INTERFACE
     Threads::Threads OpenMP::OpenMP_CXX vectorclass::vectorclass)
 
-add_executable(main main.cpp local_mean_value.h span.h aligned_array.h)
+add_executable(main main.cpp lmv_seq.h lmv_blocked.h lmv_vcl.h)
 target_link_libraries(main PRIVATE parallel)
 
 #target_compile_definitions(jacobi_msg PRIVATE PRINT_RESULT)

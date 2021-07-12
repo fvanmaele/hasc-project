@@ -1,5 +1,7 @@
 #define HASC_SPAN_CHECKED
 #include "span.h"
+#include "local_mean_value.h"
+#include "aligned_ptr.h"
 
 int main() {
   using namespace hasc;
@@ -8,5 +10,6 @@ int main() {
   span<double> S(a, 5);
   S[1] = 444;
   printf("%f\n", S[1]);
+
   return 0;
 }

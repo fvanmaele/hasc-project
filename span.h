@@ -34,7 +34,7 @@ public:
 #endif
     return ptr[idx];
   }
-  constexpr ptrdiff_t size() const {
+  constexpr ptrdiff_t ssize() const {
     return n;
   }
   constexpr bool empty() const {
