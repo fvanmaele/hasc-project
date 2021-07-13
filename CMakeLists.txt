@@ -84,8 +84,13 @@ add_library(parallel INTERFACE simd_selector.h span.h aligned_array.h)
 target_link_libraries(parallel INTERFACE
     Threads::Threads OpenMP::OpenMP_CXX vectorclass::vectorclass)
 
-add_executable(main main.cpp lmv_seq.h lmv_blocked.h lmv_vcl.h)
-target_link_libraries(main PRIVATE parallel)
+add_executable(main main.cpp lmv_seq.h lmv_vcl.h)
+target_link_libraries(main PRIVATE
+    parallel)
+
+add_executable(benchmark benchmark.cpp lmv_seq.h lmv_vcl.h)
+target_link_libraries(benchmark PRIVATE
+    benchmark::benchmark benchmark::benchmark_main parallel)
 
 #target_compile_definitions(jacobi_msg PRIVATE PRINT_RESULT)
 #target_compile_definitions(jacobi_msg PRIVATE PRINT_STEPS)

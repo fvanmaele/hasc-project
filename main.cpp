@@ -1,15 +1,68 @@
-#define HASC_SPAN_CHECKED
-#include "span.h"
-#include "local_mean_value.h"
-#include "aligned_ptr.h"
+#include <cstdio>
+#define HASC_SPAN_CHECKED // for debugging purposes
+#include "lmv_seq.h"
+#include "lmv_vcl.h"
+#include "aligned_array.h"
+
+using namespace hasc;
+
+void print_2d_array(const double* x, int n)
+{
+  for (int i = 0; i < n; ++i)
+  {
+    printf("[");
+    for (int j = 0; j < n-1; ++j)
+      printf(" %8.3f", x[i*n+j]);
+    printf(" %f ]\n", x[i*n+(n-1)]);
+  }
+}
+
+void fill(double* x, size_t len, int a)
+{
+  for (size_t i = 0; i < len; ++i)
+    x[i] = a;
+}
+
+void iota(double* x, size_t len, int a0 = 1)
+{
+  for (size_t i = 0; i < len; ++i)
+    x[i] = a0++;
+}
 
 int main() {
-  using namespace hasc;
-  double a[5];
-  a[0] = a[1] = a[2] = a[3] = a[4] = 1;
-  span<double> S(a, 5);
-  S[1] = 444;
-  printf("%f\n", S[1]);
+  const int n = 16;
+  const size_t nsq = n*n;
+  const int k = 3;
+  double u[nsq];
+  iota(u, nsq, 1);
 
-  return 0;
+  span<const double> Su(u, nsq);
+  print_2d_array(u, n);
+  printf("\n");
+
+  double mean[nsq];
+  span<double> Smean(mean, nsq);
+  fill(mean, nsq, 0);
+
+  // Vanilla version
+  lmv_2d(n, k, Su, Smean);
+  print_2d_array(mean, n);
+  printf("\n");
+
+  // Blocked version
+  fill(mean, nsq, 0);
+  lmv_2d_blocked<4, 64>(n, k, Su, Smean);
+  print_2d_array(mean, n);
+  printf("\n");
+
+  // Vectorized version
+  fill(mean, nsq, 0);
+  lmv_2d_vectorized<4>(n, k, Su, Smean);
+  print_2d_array(mean, n);
+  printf("\n");
+
+  // Block vectorized version
+  fill(mean, nsq, 0);
+  lmv_2d_blocked_vectorized<4, 64, 4>(n, k, Su, Smean);
+  print_2d_array(mean, n);
 }

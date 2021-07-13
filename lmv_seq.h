@@ -11,64 +11,53 @@
 #define INDEX(i, j, n) ((i)*n+(j))
 
 // minimum and maximum value
-#define min(X, Y) ((X) < (Y) ? (X) : (Y))
-#define max(X, Y) ((X) > (Y) ? (X) : (Y))
+#define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
+#define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 
 namespace hasc
 {
 
-// Vanilla version
-inline void lmv_2d(int n, int k, span<const double> u, span<double> mean)
+// Version with dynamic bounds, suitable for boundary points
+inline void lmv_2d(int i0, int i1, int j0, int j1, int n, int k,
+                   span<const double> u, span<double> mean)
 {
-  // Precondition checks
-  assert(k >= 1 && n > k);
-  assert(u.ssize() == n*n);
+  for (int i = i0; i < i1; ++i)
+  {
+    const int a_begin = MAX(i-k, 0);
+    const int a_end = MIN(i+k, n-1);
 
-  for (int j = 0; j < n; ++j)
-    for (int i = 0; i < n; ++i)
+    for (int j = j0; j < j1; ++j)
     {
+      const int b_begin = MAX(j-k, 0);
+      const int b_end = MIN(j+k, n-1);
       const size_t center = INDEX(i, j, n);
       mean[center] = 0;
 
-      int a_begin = max(i-k, 0);
-      int a_end = min(i-k, n-1);
-      int b_begin = max(j-k, 0);
-      int b_end = min(j+k, n-1);
-
-      for (int b = b_begin; b <= b_end; ++b)
-        for (int a = a_begin; a <= a_end; ++a)
+      //size_t cnt = 0;
+      for (int a = a_begin; a <= a_end; ++a)
+        for (int b = b_begin; b <= b_end; ++b)
         {
           mean[center] += u[INDEX(a, b, n)];
         }
-      double factor = 1/((a_end - a_begin)*(b_end - b_begin));
+      double factor = 1./((a_end-a_begin+1)*(b_end-b_begin+1));
+      //double factor = 1./cnt;
       mean[center] *= factor;
     }
+  }
 }
 
-// Version which uses a padded array n. Because the factor 1/|Sigma| is constant for
-// every point, this version will have different results on the boundary.
-inline void lmv_2d_padded(int pn, int k, span<const double> pu, span<double> pmean)
+inline void lmv_2d(int n, int k, span<const double> u, span<double> mean)
 {
-  // Precondition checks
-  assert(k >= 1 && pn > k);
-  assert(pu.ssize() == pn*pn);
+  lmv_2d(0, n, 0, n, n, k, u, mean);
+}
 
-  // Constant factor for all points
-  const double factor = 1./((2*k + 1)*(2*k + 1));
-
-  for (int j = k; j < pn-k; j++)
-    for (int i = k; i < pn-k; i++)
-    {
-      const size_t center = INDEX(i, j, pn);
-      pmean[center] = 0;
-
-      for (int k0 = -k; k0 <= 2*k; ++k0)
-        for (int k1 = -k; k1 <= 2*k; ++k1)
-        {
-          pmean[center] += pu[INDEX(i+k0, j+k1, pn)];
-        }
-      pmean[center] *= factor;
-    }
+// Basic blocked version which does not distinguish between outer and inner blocks.
+template <int MI, int MJ>
+inline void lmv_2d_blocked(int n, int k, span<const double> u, span<double> mean)
+{
+  for (int J = 0; J < n; J+=MJ)
+    for (int I = 0; I < n; I+=MI)
+      lmv_2d(I, MIN(I+MI, n), J, MIN(J+MI, n), n, k, u, mean);
 }
 
 } // namespace hasc
