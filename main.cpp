@@ -30,9 +30,9 @@ void iota(double* x, size_t len, int a0 = 1)
 }
 
 int main() {
-  const int n = 16;
+  const int n = 8;
   const size_t nsq = n*n;
-  const int k = 3;
+  const int k = 1;
   double u[nsq];
   iota(u, nsq, 1);
 
@@ -49,20 +49,26 @@ int main() {
   print_2d_array(mean, n);
   printf("\n");
 
-  // Blocked version
-  fill(mean, nsq, 0);
-  lmv_2d_blocked<4, 64>(n, k, Su, Smean);
-  print_2d_array(mean, n);
-  printf("\n");
+//  // Blocked version
+//  fill(mean, nsq, 0);
+//  lmv_2d_blocked<4, 32>(n, k, Su, Smean);
+//  print_2d_array(mean, n);
+//  printf("\n");
 
-  // Vectorized version
-  fill(mean, nsq, 0);
-  lmv_2d_vectorized<4>(n, k, Su, Smean);
-  print_2d_array(mean, n);
-  printf("\n");
+//  // Vectorized version
+//  fill(mean, nsq, 0);
+//  lmv_2d_vectorized<4>(n, k, Su, Smean);
+//  print_2d_array(mean, n);
+//  printf("\n");
 
-  // Block vectorized version
+//  // Block vectorized version
+//  fill(mean, nsq, 0);
+//  lmv_2d_blocked_vectorized<4, 64, 4>(n, k, Su, Smean);
+//  print_2d_array(mean, n);
+//  printf("\n");
+
+  // Vectorized version (2)
   fill(mean, nsq, 0);
-  lmv_2d_blocked_vectorized<4, 64, 4>(n, k, Su, Smean);
+  lmv_2d_vectorized_buffered<4>(n, k, Su, Smean);
   print_2d_array(mean, n);
 }

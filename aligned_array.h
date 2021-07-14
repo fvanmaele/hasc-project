@@ -9,7 +9,7 @@
 namespace hasc
 {
 template <typename T, size_t alignment = 64>
-class aligned_array
+struct aligned_array
 {
 private:
   T* __restrict__ ptr;

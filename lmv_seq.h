@@ -30,17 +30,15 @@ inline void lmv_2d(int i0, int i1, int j0, int j1, int n, int k,
     {
       const int b_begin = MAX(j-k, 0);
       const int b_end = MIN(j+k, n-1);
+      const double factor = 1./((a_end-a_begin+1)*(b_end-b_begin+1));
       const size_t center = INDEX(i, j, n);
       mean[center] = 0;
 
-      //size_t cnt = 0;
       for (int a = a_begin; a <= a_end; ++a)
         for (int b = b_begin; b <= b_end; ++b)
         {
           mean[center] += u[INDEX(a, b, n)];
         }
-      double factor = 1./((a_end-a_begin+1)*(b_end-b_begin+1));
-      //double factor = 1./cnt;
       mean[center] *= factor;
     }
   }
@@ -55,9 +53,10 @@ inline void lmv_2d(int n, int k, span<const double> u, span<double> mean)
 template <int MI, int MJ>
 inline void lmv_2d_blocked(int n, int k, span<const double> u, span<double> mean)
 {
-  for (int J = 0; J < n; J+=MJ)
-    for (int I = 0; I < n; I+=MI)
-      lmv_2d(I, MIN(I+MI, n), J, MIN(J+MI, n), n, k, u, mean);
+  for (int I = 0; I < n; I+=MI)
+    for (int J = 0; J < n; J+=MJ)
+      lmv_2d(I, MIN(I+MI, n),
+             J, MIN(J+MJ, n), n, k, u, mean);
 }
 
 } // namespace hasc

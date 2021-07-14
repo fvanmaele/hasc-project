@@ -4,6 +4,7 @@
 
 #ifndef HASC_LMV_VCL_H
 #define HASC_LMV_VCL_H
+#include <cstring>
 #include <cassert>
 #include "span.h"
 #include "simd_selector.h"
@@ -68,74 +69,94 @@ inline void lmv_2d_vectorized(int n, int k, span<const double> u, span<double> m
 template <int MI, int MJ, int W>
 inline void lmv_2d_blocked_vectorized(int n, int k, span<const double> u, span<double> mean)
 {
-  for (int J = 0; J < n; J+=MJ)
-    for (int I = 0; I < n; I+=MI)
-      lmv_2d_vectorized<W>(I, MIN(I+MI, n), J, MIN(J+MI, n), n, k, u, mean);
+  for (int I = 0; I < n; I+=MI)
+    for (int J = 0; J < n; J+=MJ)
+      lmv_2d_vectorized<W>(I, MIN(I+MI, n),
+                           J, MIN(J+MJ, n), n, k, u, mean);
 }
 
-// FIXME: code broken
-template <int W>
-inline void lmv_2d_vectorized_2(int n, int k, span<const double> u, span<double> mean)
+template <int W, int MaxSize = 256>
+inline void lmv_2d_vectorized_buffered(int i0, int i1, int j0, int j1, int n, int k,
+                                       span<const double> u, span<double> mean)
 {
-  // Divisiblity constraints
   assert(n % W == 0);
+  assert(W+2*k <= MaxSize);
 
   using VecWd = typename SIMDSelector<W>::SIMDType;
 
-  for (int i = 0; i < n; ++i)
+  for (int i = i0; i < i1; ++i)
   {
     const int a_begin = MAX(i-k, 0);
     const int a_end = MIN(i+k, n-1);
 
-    int j;
-    for (j = 0; j+W < n; j+=W)
+    for (int j = j0; j+W <= j1; j+=W)
     {
       const int b_begin = MAX(j-k, 0);
-      const int b_end = MIN(j+k+W, n-1);  // neighborhood extends in j direction
+      const int b_end = MIN(j+k+W-1, n-1);  // neighborhood extends in j direction
 
-      // buffer for row in neighborhood of u_{i,j}
-      double rowk[W+2*k] = {0}; // TODO: alignment?
+      // buffer for row of neighborhood centered in (i,j)...(i,j+W-1)
+      double buf[MaxSize];
+      ptrdiff_t buf_used = W+2*k;
+      memset(buf, 0, sizeof(double)*buf_used); // zero-padded
+
+      span<double> Sbuf(buf, buf_used);
+      int offset = j-k < 0 ? k-j : 0;
 
       for (int a = a_begin; a <= a_end; ++a)
       {
         int b;
+        int count = 0;
         for (b = b_begin; b+W <= b_end; b+=W)
         {
-          const int offset = b-b_begin;
           VecWd Vseg1, Vseg2;
-          Vseg1.load(&rowk[offset]);
+          Vseg1.load(&buf[offset+count*W]);
           Vseg2.load(&u[INDEX(a, b, n)]);
 
           VecWd Vseg = Vseg1 + Vseg2;
-          Vseg.store(&rowk[offset]); // update buffer
+          Vseg.store(&buf[offset+count*W]);  // update buffer
+          count++;
         }
 
-        const int offset = b-b_begin;
         VecWd Vseg1, Vseg2;
-        Vseg1.load_partial(b_end-b+1, &rowk[offset]);
-        Vseg2.load_partial(b_end-b+1, &u[INDEX(a, b, n)]);
+        int remainder = b_end-b+1;
+        Vseg1.load_partial(remainder, &buf[offset+count*W]);
+        Vseg2.load_partial(remainder, &u[INDEX(a, b, n)]);
 
         VecWd Vseg = Vseg1 + Vseg2;
-        Vseg.store_partial(a_end-a, &rowk[offset]);
+        Vseg.store_partial(remainder, &buf[offset+count*W]);
       }
 
-      // Compute local mean values (shifted by pos+k)
+      // Compute local mean values (shifted, zero additions on boundary points)
       const size_t center = INDEX(i, j, n);
       for (int c = 0; c < W; ++c)
       {
-        const int b_begin_local = MAX(j+c-k, 0);
-        const int b_end_local = MIN(j+c+k, n-1);
-        const int a_n = a_end-a_begin+1;
+        const int bc_begin = MAX(j+c-k, 0);
+        const int bc_end = MIN(j+c+k, n-1);
+        const double factor = 1./((bc_end-bc_begin+1)*(a_end-a_begin+1));
 
-        const double factor = 1./((b_end_local-b_begin_local+1)*a_n);
-        for (int l = 0; l < a_n; ++l)
+        for (int bi = 0; bi <= 2*k; ++bi)
         {
-          mean[center+c] += rowk[l];
+          mean[center+c] += Sbuf[bi+c]; // horizontal add
         }
         mean[center+c] *= factor;
       }
     }
   }
+}
+
+template <int W>
+inline void lmv_2d_vectorized_buffered(int n, int k, span<const double> u, span<double> mean)
+{
+  lmv_2d_vectorized_buffered<W>(0, n, 0, n, n, k, u, mean);
+}
+
+template <int MI, int MJ, int W>
+inline void lmv_2d_vectorized_buffered_blocked(int n, int k, span<const double> u, span<double> mean)
+{
+  for (int I = 0; I < n; I+=MI)
+    for (int J = 0; J < n; J+=MJ)
+      lmv_2d_vectorized_buffered<W>(I, MIN(I+MI, n),
+                                    J, MIN(J+MJ, n), n, k, u, mean);
 }
 
 } // namespace hasc
