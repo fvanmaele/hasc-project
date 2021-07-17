@@ -18,8 +18,8 @@ namespace hasc
 {
 
 // Version with dynamic bounds, suitable for boundary points
-inline void lmv_2d(int i0, int i1, int j0, int j1, int n, int k,
-                   span<const double> u, span<double> mean)
+inline void lmv_2d_kernel(int i0, int i1, int j0, int j1, int n, int k,
+                          span<const double> u, span<double> mean)
 {
   for (int i = i0; i < i1; ++i)
   {
@@ -46,7 +46,7 @@ inline void lmv_2d(int i0, int i1, int j0, int j1, int n, int k,
 
 inline void lmv_2d(int n, int k, span<const double> u, span<double> mean)
 {
-  lmv_2d(0, n, 0, n, n, k, u, mean);
+  lmv_2d_kernel(0, n, 0, n, n, k, u, mean);
 }
 
 // Basic blocked version which does not distinguish between outer and inner blocks.
@@ -55,8 +55,18 @@ inline void lmv_2d_blocked(int n, int k, span<const double> u, span<double> mean
 {
   for (int I = 0; I < n; I+=MI)
     for (int J = 0; J < n; J+=MJ)
-      lmv_2d(I, MIN(I+MI, n),
-             J, MIN(J+MJ, n), n, k, u, mean);
+      lmv_2d_kernel(I, MIN(I+MI, n),
+                    J, MIN(J+MJ, n), n, k, u, mean);
+}
+
+template <int MI, int MJ>
+inline void lmv_2d_blocked_openmp(int n, int k, span<const double> u, span<double> mean)
+{
+#pragma omp parallel for collapse(2)
+    for (int I = 0; I < n; I+=MI)
+      for (int J = 0; J < n; J+=MJ)
+        lmv_2d_kernel(I, MIN(I+MI, n),
+                      J, MIN(J+MJ, n), n, k, u, mean);
 }
 
 } // namespace hasc

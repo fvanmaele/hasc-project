@@ -42,30 +42,29 @@ int main() {
 
   double mean[nsq];
   span<double> Smean(mean, nsq);
-  fill(mean, nsq, 0);
 
   // Vanilla version
   lmv_2d(n, k, Su, Smean);
   print_2d_array(mean, n);
   printf("\n");
 
-//  // Blocked version
-//  fill(mean, nsq, 0);
-//  lmv_2d_blocked<4, 32>(n, k, Su, Smean);
-//  print_2d_array(mean, n);
-//  printf("\n");
+  // Blocked version
+  fill(mean, nsq, 0);
+  lmv_2d_blocked<4, 4>(n, k, Su, Smean);
+  print_2d_array(mean, n);
+  printf("\n");
 
-//  // Vectorized version
-//  fill(mean, nsq, 0);
-//  lmv_2d_vectorized<4>(n, k, Su, Smean);
-//  print_2d_array(mean, n);
-//  printf("\n");
+  // Vectorized version
+  fill(mean, nsq, 0);
+  lmv_2d_vectorized<4>(n, k, Su, Smean);
+  print_2d_array(mean, n);
+  printf("\n");
 
-//  // Block vectorized version
-//  fill(mean, nsq, 0);
-//  lmv_2d_blocked_vectorized<4, 64, 4>(n, k, Su, Smean);
-//  print_2d_array(mean, n);
-//  printf("\n");
+  // Block vectorized version
+  fill(mean, nsq, 0);
+  lmv_2d_vectorized_blocked<4, 4, 4>(n, k, Su, Smean);
+  print_2d_array(mean, n);
+  printf("\n");
 
   // Vectorized version (2)
   fill(mean, nsq, 0);

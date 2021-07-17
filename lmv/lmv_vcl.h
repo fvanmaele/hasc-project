@@ -21,8 +21,8 @@ namespace hasc
 
 // Version which vectorizes over every point (i,j)
 template <int W>
-inline void lmv_2d_vectorized(int i0, int i1, int j0, int j1, int n, int k,
-                              span<const double> u, span<double> mean)
+inline void lmv_2d_vectorized_kernel(int i0, int i1, int j0, int j1, int n, int k,
+                                     span<const double> u, span<double> mean)
 {
   using VecWd = typename SIMDSelector<W>::SIMDType;
 
@@ -62,22 +62,32 @@ inline void lmv_2d_vectorized(int i0, int i1, int j0, int j1, int n, int k,
 template <int W>
 inline void lmv_2d_vectorized(int n, int k, span<const double> u, span<double> mean)
 {
-  lmv_2d_vectorized<W>(0, n, 0, n, n, k, u, mean);
+  lmv_2d_vectorized_kernel<W>(0, n, 0, n, n, k, u, mean);
 }
 
 // Basic blocked version which does not distinguish between outer and inner blocks.
 template <int MI, int MJ, int W>
-inline void lmv_2d_blocked_vectorized(int n, int k, span<const double> u, span<double> mean)
+inline void lmv_2d_vectorized_blocked(int n, int k, span<const double> u, span<double> mean)
 {
   for (int I = 0; I < n; I+=MI)
     for (int J = 0; J < n; J+=MJ)
-      lmv_2d_vectorized<W>(I, MIN(I+MI, n),
-                           J, MIN(J+MJ, n), n, k, u, mean);
+      lmv_2d_vectorized_kernel<W>(I, MIN(I+MI, n),
+                                  J, MIN(J+MJ, n), n, k, u, mean);
+}
+
+template <int MI, int MJ, int W>
+inline void lmv_2d_vectorized_blocked_openmp(int n, int k, span<const double> u, span<double> mean)
+{
+#pragma omp parallel for collapse(2)
+  for (int I = 0; I < n; I+=MI)
+    for (int J = 0; J < n; J+=MJ)
+      lmv_2d_vectorized_kernel<W>(I, MIN(I+MI, n),
+                                  J, MIN(J+MJ, n), n, k, u, mean);
 }
 
 template <int W, int MaxSize = 256>
-inline void lmv_2d_vectorized_buffered(int i0, int i1, int j0, int j1, int n, int k,
-                                       span<const double> u, span<double> mean)
+inline void lmv_2d_vectorized_buffered_kernel(int i0, int i1, int j0, int j1, int n, int k,
+                                              span<const double> u, span<double> mean)
 {
   assert(n % W == 0);
   assert(W+2*k <= MaxSize);
@@ -134,6 +144,7 @@ inline void lmv_2d_vectorized_buffered(int i0, int i1, int j0, int j1, int n, in
         const int bc_end = MIN(j+c+k, n-1);
         const double factor = 1./((bc_end-bc_begin+1)*(a_end-a_begin+1));
 
+        mean[center+c] = 0;
         for (int bi = 0; bi <= 2*k; ++bi)
         {
           mean[center+c] += Sbuf[bi+c]; // horizontal add
@@ -147,7 +158,7 @@ inline void lmv_2d_vectorized_buffered(int i0, int i1, int j0, int j1, int n, in
 template <int W>
 inline void lmv_2d_vectorized_buffered(int n, int k, span<const double> u, span<double> mean)
 {
-  lmv_2d_vectorized_buffered<W>(0, n, 0, n, n, k, u, mean);
+  lmv_2d_vectorized_buffered_kernel<W>(0, n, 0, n, n, k, u, mean);
 }
 
 template <int MI, int MJ, int W>
@@ -155,8 +166,18 @@ inline void lmv_2d_vectorized_buffered_blocked(int n, int k, span<const double> 
 {
   for (int I = 0; I < n; I+=MI)
     for (int J = 0; J < n; J+=MJ)
-      lmv_2d_vectorized_buffered<W>(I, MIN(I+MI, n),
-                                    J, MIN(J+MJ, n), n, k, u, mean);
+      lmv_2d_vectorized_buffered_kernel<W>(I, MIN(I+MI, n),
+                                           J, MIN(J+MJ, n), n, k, u, mean);
+}
+
+template <int MI, int MJ, int W>
+inline void lmv_2d_vectorized_buffered_blocked_openmp(int n, int k, span<const double> u, span<double> mean)
+{
+#pragma omp parallel for collapse(2)
+  for (int I = 0; I < n; I+=MI)
+    for (int J = 0; J < n; J+=MJ)
+      lmv_2d_vectorized_buffered_kernel<W>(I, MIN(I+MI, n),
+                                           J, MIN(J+MJ, n), n, k, u, mean);
 }
 
 } // namespace hasc

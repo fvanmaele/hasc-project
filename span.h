@@ -5,7 +5,6 @@
 #ifndef HASC_SPAN_H
 #define HASC_SPAN_H
 #include <cstddef>
-#include <cfloat>
 #include <cmath>
 
 #ifdef HASC_SPAN_CHECKED
@@ -36,25 +35,12 @@ public:
 #endif
     return ptr[idx];
   }
-  constexpr ptrdiff_t ssize() const {
+  constexpr ptrdiff_t size() const
+  {
     return n;
   }
 };
 
-bool operator== (span<double> a, span<double> b)
-{
-  if (a.ssize() != b.ssize())
-    return false;
-  bool equal = true;
-
-  for (ptrdiff_t i = 0; i < a.ssize(); ++i)
-    if (std::abs(a[i]-b[i]) > DBL_EPSILON)
-    {
-      equal = false;
-      break;
-    }
-  return equal;
-}
 
 } // namespace hasc
 

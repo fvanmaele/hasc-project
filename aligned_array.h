@@ -38,7 +38,7 @@ public:
   const T* data() const noexcept {
     return ptr;
   }
-  ptrdiff_t ssize() const noexcept {
+  ptrdiff_t size() const noexcept {
     return n;
   }
 };
