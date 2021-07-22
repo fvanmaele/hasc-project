@@ -75,16 +75,6 @@ inline void lmv_2d_vectorized_blocked(int n, int k, span<const double> u, span<d
                                   J, MIN(J+MJ, n), n, k, u, mean);
 }
 
-template <int MI, int MJ, int W>
-inline void lmv_2d_vectorized_blocked_openmp(int n, int k, span<const double> u, span<double> mean)
-{
-#pragma omp parallel for collapse(2)
-  for (int I = 0; I < n; I+=MI)
-    for (int J = 0; J < n; J+=MJ)
-      lmv_2d_vectorized_kernel<W>(I, MIN(I+MI, n),
-                                  J, MIN(J+MJ, n), n, k, u, mean);
-}
-
 template <int W, int MaxSize = 256>
 inline void lmv_2d_vectorized_buffered_kernel(int i0, int i1, int j0, int j1, int n, int k,
                                               span<const double> u, span<double> mean)
@@ -164,16 +154,6 @@ inline void lmv_2d_vectorized_buffered(int n, int k, span<const double> u, span<
 template <int MI, int MJ, int W>
 inline void lmv_2d_vectorized_buffered_blocked(int n, int k, span<const double> u, span<double> mean)
 {
-  for (int I = 0; I < n; I+=MI)
-    for (int J = 0; J < n; J+=MJ)
-      lmv_2d_vectorized_buffered_kernel<W>(I, MIN(I+MI, n),
-                                           J, MIN(J+MJ, n), n, k, u, mean);
-}
-
-template <int MI, int MJ, int W>
-inline void lmv_2d_vectorized_buffered_blocked_openmp(int n, int k, span<const double> u, span<double> mean)
-{
-#pragma omp parallel for collapse(2)
   for (int I = 0; I < n; I+=MI)
     for (int J = 0; J < n; J+=MJ)
       lmv_2d_vectorized_buffered_kernel<W>(I, MIN(I+MI, n),

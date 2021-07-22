@@ -25,20 +25,16 @@ public:
   aligned_array& operator=(const aligned_array& other) = delete;
   aligned_array(aligned_array&& other) = default;
   aligned_array& operator=(aligned_array&& other) = default;
-
-  ~aligned_array()
-  {
-    delete[] ptr;
-  }
+  ~aligned_array() { delete[] ptr; }
 
   // accessor methods
-  T* data() noexcept {
+  constexpr T* data() {
     return ptr;
   }
-  const T* data() const noexcept {
+  constexpr const T* data() const {
     return ptr;
   }
-  ptrdiff_t size() const noexcept {
+  constexpr ptrdiff_t ssize() const {
     return n;
   }
 };

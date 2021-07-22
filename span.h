@@ -6,6 +6,8 @@
 #define HASC_SPAN_H
 #include <cstddef>
 #include <cmath>
+#include <array>
+#include "aligned_array.h"
 
 #ifdef HASC_SPAN_CHECKED
 #include <cstdlib>
@@ -25,6 +27,22 @@ public:
   constexpr span(T *ptr_, ptrdiff_t n_)
     : ptr(ptr_), n(n_) {}
 
+  template <size_t alignment>
+  constexpr span(const aligned_array<T, alignment>& A)
+    : ptr(A.data()), n(A.ssize()) {}
+
+  template <size_t alignment>
+  constexpr span(aligned_array<T, alignment>& A)
+    : ptr(A.data()), n(A.ssize()) {}
+
+  template <size_t N>
+  constexpr span(const std::array<T, N>& A)
+    : ptr(A.data()), n(static_cast<ptrdiff_t>(A.size())) {}
+
+  template <size_t N>
+  constexpr span(std::array<T, N>& A)
+    : ptr(A.data()), n(static_cast<ptrdiff_t>(A.size())) {}
+
   constexpr T& operator[](ptrdiff_t idx) const
   {
 #ifdef HASC_SPAN_CHECKED
@@ -35,9 +53,21 @@ public:
 #endif
     return ptr[idx];
   }
-  constexpr ptrdiff_t size() const
+  constexpr ptrdiff_t ssize() const
   {
     return n;
+  }
+  constexpr T* data() const
+  {
+    return ptr;
+  }
+  constexpr T* begin() const
+  {
+    return ptr;
+  }
+  constexpr T* end() const
+  {
+    return ptr+n;
   }
 };
 

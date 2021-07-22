@@ -59,16 +59,6 @@ inline void lmv_2d_blocked(int n, int k, span<const double> u, span<double> mean
                     J, MIN(J+MJ, n), n, k, u, mean);
 }
 
-template <int MI, int MJ>
-inline void lmv_2d_blocked_openmp(int n, int k, span<const double> u, span<double> mean)
-{
-#pragma omp parallel for collapse(2)
-    for (int I = 0; I < n; I+=MI)
-      for (int J = 0; J < n; J+=MJ)
-        lmv_2d_kernel(I, MIN(I+MI, n),
-                      J, MIN(J+MJ, n), n, k, u, mean);
-}
-
 } // namespace hasc
 
 #endif // HASC_LMV_SEQ_H

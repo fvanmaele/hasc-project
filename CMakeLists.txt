@@ -83,7 +83,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 add_library(utility INTERFACE simd_selector.h span.h aligned_array.h)
 target_link_libraries(utility INTERFACE
-    Threads::Threads OpenMP::OpenMP_CXX vectorclass::vectorclass)
+    vectorclass::vectorclass)
 
 add_subdirectory("lmv")
 add_subdirectory("jacobi")

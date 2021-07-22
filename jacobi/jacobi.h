@@ -1,7 +1,6 @@
 #ifndef HASC_JACOBI_H
 #define HASC_JACOBI_H
 #include <cassert>
-#include <utility>
 #include "span.h"
 
 // row-major index mapping
@@ -13,12 +12,10 @@
 
 namespace hasc
 {
-
-inline void jacobi_2d(int i0, int i1, int j0, int j1, int n, int k, int iterations,
-                      span<double> uold, span<double> unew,
-                      span<const double> coeff)
+inline void jacobi_2d_kernel(int i0, int i1, int j0, int j1, int n, int k, int iterations,
+                             span<double> uold, span<double> unew, span<const double> coeff)
 {
-  assert(coeff.size() == 2*k+1); // assume coefficient stencil of fixed size
+  assert(coeff.ssize() == (2*k+1)*(2*k+1)); // assume coefficient stencil of fixed size
 
   for (int it = 1; it <= iterations; ++it)
   {
@@ -31,13 +28,15 @@ inline void jacobi_2d(int i0, int i1, int j0, int j1, int n, int k, int iteratio
       {
         const int b_begin = MAX(j-k, 0);
         const int b_end = MIN(j+k, n-1);
-        const size_t idx = INDEX(i, j, n);
+        const size_t center = INDEX(i, j, n);
+        size_t cnt = 0;
 
+        // process coefficients from left to right
+        unew[center] = 0;
         for (int a = a_begin; a <= a_end; ++a)
-          for (int b = b_begin; b <= b_end; ++b)
+          for (int b = b_begin; b <= b_end; ++b, ++cnt)
           {
-            // coefficient array is 0-indexed, offset with k
-            unew[idx] += coeff[INDEX(a-i+k, b-j+k, n)] * uold[INDEX(a, b, n)];
+            unew[center] += coeff[cnt] * uold[INDEX(a, b, n)];
           }
       }
     }
@@ -49,7 +48,7 @@ inline void jacobi_2d(int i0, int i1, int j0, int j1, int n, int k, int iteratio
 inline void jacobi_2d(int n, int k, int iterations, span<double> uold, span<double> unew,
                       span<const double> coeff)
 {
-  jacobi_2d(0, n, 0, n, n, k, iterations, uold, unew, coeff);
+  jacobi_2d_kernel(0, n, 0, n, n, k, iterations, uold, unew, coeff);
 }
 
 template <int MI, int MJ>
@@ -58,8 +57,8 @@ inline void jacobi_2d_blocked(int n, int k, int iterations, span<double> uold, s
 {
   for (int I = 0; I < n; I+=MI)
     for (int J = 0; J < n; J+=MJ)
-      jacobi_2d(I, MIN(I+MI, n),
-                J, MIN(J+MJ, n), n, k, iterations, uold, unew, coeff);
+      jacobi_2d_kernel(I, MIN(I+MI, n),
+                       J, MIN(J+MJ, n), n, k, iterations, uold, unew, coeff);
 }
 
 template <int MI, int MJ>
@@ -69,8 +68,8 @@ inline void jacobi_2d_blocked_openmp(int n, int k, int iterations, span<double> 
 #pragma omp parallel for collapse(2)
   for (int I = 0; I < n; I+=MI)
     for (int J = 0; J < n; J+=MJ)
-      jacobi_2d(I, MIN(I+MI, n),
-                J, MIN(J+MJ, n), n, k, iterations, uold, unew, coeff);
+      jacobi_2d_kernel(I, MIN(I+MI, n),
+                       J, MIN(J+MJ, n), n, k, iterations, uold, unew, coeff);
 }
 
 } // namespace hasc
