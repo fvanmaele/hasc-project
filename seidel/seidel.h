@@ -22,13 +22,11 @@ inline void update_neighbors(int i, int j, int n, int k, int a_begin, int a_end,
 
   // process coefficients from left to right
   for (int a = a_begin; a <= a_end; ++a)
-  {
     for (int b = b_begin; b <= b_end; ++b, ++cnt)
     {
       const size_t idx = INDEX(a, b, n);
       u[center] += coeff[cnt] * u[idx];
     }
-  }
 }
 
 } // namespace detail
@@ -36,7 +34,7 @@ inline void update_neighbors(int i, int j, int n, int k, int a_begin, int a_end,
 inline void symmetric_seidel_2d(int n, int k, int iterations, span<double> u,
                                 span<const double> coeff)
 {
-  assert(coeff.size() == (2*k+1)*(2*k+1)); // assume coefficient stencil of fixed size
+  assert(coeff.ssize() == (2*k+1)*(2*k+1)); // assume coefficient stencil of fixed size
 
   for (int it = 1; it <= iterations; ++it)
   {

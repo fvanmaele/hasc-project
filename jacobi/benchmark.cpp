@@ -2,33 +2,16 @@
 #include <vector>
 #include <random>
 #include "jacobi.h"
+#include "util.h"
 #include "aligned_array.h"
 
 using namespace hasc;
-
-template <typename T>
-T unifrnd(int a, int b)
-{
-  std::random_device rand_dev;
-  std::mt19937_64 generator(rand_dev());
-  std::uniform_real_distribution<double> distr(a, b);
-  return distr(generator);
-}
 
 template <typename T>
 void unifrnd_array(T* x, size_t x_len, int a, int b)
 {
   for (size_t i = 0; i < x_len; ++i)
     x[i] = unifrnd<T>(a, b);
-}
-
-template <typename T>
-void model_coefficients_2d(T* coeff, int coeff_n, int k)
-{
-  for (int i = 0; i < coeff_n; ++i)
-    for (int j = 0; j < coeff_n; ++j)
-      i == k && j == k ? coeff[INDEX(i, j, coeff_n)] = 50
-                       : coeff[INDEX(i, j, coeff_n)] = 1./MAX(i, j);
 }
 
 template <typename... Args>
@@ -39,8 +22,8 @@ void jacobi_2d_vanilla(int n, int k, int iterations, span<double> uold, span<dou
 }
 
 // All benchmarks are identical apart from the called function, use macro
-#define BM_GENERATE(func, test_case_name, ...)                      \
-  static void BM_##func ## _ ##test_case_name (benchmark::State& state)     \
+#define BM_GENERATE(func, ...)                              \
+  static void BM_##func(benchmark::State& state)            \
   {                                                         \
     size_t n = state.range(0);                              \
     size_t k = state.range(1);                              \
@@ -53,7 +36,7 @@ void jacobi_2d_vanilla(int n, int k, int iterations, span<double> uold, span<dou
     span<double> Su1(u1);                                   \
                                                             \
     aligned_array<double, 64> coeff((2*k+1)*(2*k+1));       \
-    model_coefficients_2d(coeff.data(), 2*k+1, k);          \
+    model_coefficients_2d(coeff.data(), 2*k+1);             \
     span<const double> Scoeff(coeff.data(), coeff.ssize()); \
                                                             \
     for (auto _ : state) {                                  \
@@ -63,34 +46,25 @@ void jacobi_2d_vanilla(int n, int k, int iterations, span<double> uold, span<dou
   }
 
 // Generate benchmark code
-BM_GENERATE(jacobi_2d_vanilla,)
-BM_GENERATE(jacobi_2d_blocked, sizeA, 4, 64)
-BM_GENERATE(jacobi_2d_blocked, sizeB, 32, 256)
-BM_GENERATE(jacobi_2d_blocked_openmp, sizeA, 4, 64)
-BM_GENERATE(jacobi_2d_blocked_openmp, sizeB, 32, 256)
+BM_GENERATE(jacobi_2d_vanilla)
+BM_GENERATE(jacobi_2d_blocked, 32, 128)
+BM_GENERATE(jacobi_2d_blocked_openmp, 32, 128)
 
 // Set limits for n, k and iterations
+// Max stencil size (box): (2*7+1)^2 = 15^2
 std::vector<std::vector<int64_t>> parameter_range{
   {64, 128, 256, 512, 1024, 2048}, {1, 3, 5, 7}, {20}
 };
 
-BENCHMARK(BM_jacobi_2d_vanilla_)
+BENCHMARK(BM_jacobi_2d_vanilla)
   ->ArgsProduct(parameter_range)
   ->Unit(benchmark::kMillisecond);
 
-BENCHMARK(BM_jacobi_2d_blocked_sizeA)
+BENCHMARK(BM_jacobi_2d_blocked)
   ->ArgsProduct(parameter_range)
   ->Unit(benchmark::kMillisecond);
 
-BENCHMARK(BM_jacobi_2d_blocked_sizeB)
-  ->ArgsProduct(parameter_range)
-  ->Unit(benchmark::kMillisecond);
-
-BENCHMARK(BM_jacobi_2d_blocked_openmp_sizeA)
-  ->ArgsProduct(parameter_range)
-  ->Unit(benchmark::kMillisecond);
-
-BENCHMARK(BM_jacobi_2d_blocked_openmp_sizeB)
+BENCHMARK(BM_jacobi_2d_blocked_openmp)
   ->ArgsProduct(parameter_range)
   ->Unit(benchmark::kMillisecond);
 
