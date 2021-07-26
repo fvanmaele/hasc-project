@@ -13,3 +13,7 @@ target_link_libraries(lmv_test PRIVATE
 add_executable(lmv_benchmark benchmark.cpp)
 target_link_libraries(lmv_benchmark PRIVATE
     lmv utility benchmark::benchmark benchmark::benchmark_main)
+
+#add_executable(lmv_benchmark_blocked benchmark_blocked.cpp)
+#target_link_libraries(lmv_benchmark_blocked PRIVATE
+#    lmv utility benchmark::benchmark benchmark::benchmark_main)

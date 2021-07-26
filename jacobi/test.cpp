@@ -1,7 +1,6 @@
 #include <cstdio>
 #include <cfloat>
 #include <cstdlib>
-#include <memory>
 #include <random>
 
 #define HASC_SPAN_CHECKED
@@ -26,11 +25,11 @@ void Require(bool expr, int line)
 
 bool ApproxEq(span<double> a, span<double> b)
 {
-  if (a.ssize() != b.ssize())
+  if (a.size() != b.size())
     return false;
   bool equal = true;
 
-  for (ptrdiff_t i = 0; i < a.ssize(); ++i)
+  for (size_t i = 0; i < a.size(); ++i)
     if (std::abs(a[i]-b[i]) > DBL_EPSILON)
     {
       equal = false;
@@ -79,9 +78,18 @@ void jacobi_4point_init(int n, span<double> Su)
 }
 
 template <typename T>
+T unifrnd(const int a, const int b)
+{
+  std::random_device rand_dev;
+  std::mt19937_64 generator(rand_dev());
+  std::uniform_real_distribution<T> distr(a, b);
+  return distr(generator);
+}
+
+template <typename T>
 void unifrnd(const int a, const int b, span<double>& u)
 {
-  for (ptrdiff_t i = 0; i < u.ssize(); ++i)
+  for (size_t i = 0; i < u.size(); ++i)
     u[i] = unifrnd<T>(a, b);
 }
 
@@ -100,17 +108,17 @@ int main()
   for (int n = 64; n <= n_lim; n*=2)
   {
     std::fprintf(stderr, "4-point, n = %d\t", n);
-    aligned_array<double, 64> u0_4point(n*n);
+    aligned_array<double> u0_4point(n*n);
     span<double> Su0_4point(u0_4point);
-    aligned_array<double, 64> u1_4point(n*n);
+    aligned_array<double> u1_4point(n*n);
     span<double> Su1_4point(u1_4point);
 
     jacobi_4point_init(n, Su0_4point);
     jacobi_4point(n, iterations, Su0_4point, Su1_4point);
 
-    aligned_array<double, 64> u0(n*n);
+    aligned_array<double> u0(n*n);
     span<double> Su0(u0);
-    aligned_array<double, 64> u1(n*n);
+    aligned_array<double> u1(n*n);
     span<double> Su1(u1);
 
     jacobi_4point_init(n, Su0);
@@ -127,6 +135,36 @@ int main()
     std::fprintf(stderr, "\033[32;1m OK \033[0m\n");
   }
 
+  // Test coefficients for boundary points
+  {
+    std::fprintf(stderr, "Boundary values\t");
+    const int k = 1;
+    const int n = 8;
+    const int iterations = 1;
+
+    aligned_array<double> u0(n*n);
+    span<double> Su0(u0);
+    iota(Su0.data(), Su0.size(), 1);
+
+    aligned_array<double> u1(n*n);
+    span<double> Su1(u1);
+
+    std::array<double, 9> coeff {
+      0.0, 0.0, 0.0,
+      0.0, 1.0, 1.0,
+      0.0, 1.0, 1.0
+    };
+    span<const double> Scoeff(coeff.data(), coeff.size());
+
+    jacobi_2d(n, k, iterations, Su0, Su1, Scoeff);
+    for (size_t i = 0; i < n; ++i)
+      for (size_t j = 0; j < n; ++j)
+        if (i == 0 || j == 0 || i == n-1 || j == n-1)
+          REQUIRE(Su1[INDEX(i, j, n)] != 0);
+
+    std::fprintf(stderr, "\033[32;1m OK \033[0m\n");
+  }
+
   // Test parallel implementation against sequential version
   for (int n = 64; n <= n_lim; n*=2)
   {
@@ -136,13 +174,18 @@ int main()
 
     for (int k = 1; k <= k_lim; ++k)
     {
+      std::fprintf(stderr, "Vanilla, n = %-4d, k = %-1d\t", n, k);
       aligned_array<double> coeff((2*k+1)*(2*k+1));
-      model_coefficients_2d<double>(coeff.data(), 2*k+1);
-      span<const double> Scoeff(coeff.data(), coeff.ssize());
+      model_coefficients_2d(coeff.data(), 2*k+1);
+      span<const double> Scoeff(coeff.data(), coeff.size());
 
+      // Check if coefficients are NaN or inf
+      REQUIRE(isfinite_array(coeff.data(), coeff.size()));
+
+      // Prepare input data
       aligned_array<double> u0_seq(n*n);
       span<double> Su0_seq(u0_seq);
-      for (ptrdiff_t i = 0; i < Su0_seq.ssize(); ++i)
+      for (size_t i = 0; i < Su0_seq.size(); ++i)
         Su0_seq[i] = Su_unif[i];
 
       aligned_array<double> u1_seq(n*n);
@@ -150,14 +193,17 @@ int main()
       jacobi_2d(n, k, iterations, Su0_seq, Su1_seq, Scoeff);
 
       // Test convergence of sequential version to zero
+      REQUIRE(isfinite_array(u0_seq.data(), u0_seq.size()));
+      REQUIRE(isfinite_array(u1_seq.data(), u1_seq.size()));
       REQUIRE(NormF(Su1_seq) < 1e-6);
+      std::fprintf(stderr, "\033[32;1m OK \033[0m\n");
 
       { // Blocked version
         std::fprintf(stderr, "Blocked, n = %-4d, k = %-1d\t", n, k);
 
         aligned_array<double> u0(n*n);
         span<double> Su0(u0);
-        for (ptrdiff_t i = 0; i < Su0.ssize(); ++i)
+        for (size_t i = 0; i < Su0.size(); ++i)
           Su0[i] = Su_unif[i];
 
         aligned_array<double> u1(n*n);
@@ -171,11 +217,11 @@ int main()
       }
 
       { // OpenMP version
-        std::fprintf(stderr, "OpenMP, n = %-4d, k = %-1d\t", n, k);
+        std::fprintf(stderr, "OpenMP,  n = %-4d, k = %-1d\t", n, k);
 
         aligned_array<double> u0(n*n);
         span<double> Su0(u0);
-        for (ptrdiff_t i = 0; i < Su0.ssize(); ++i)
+        for (size_t i = 0; i < Su0.size(); ++i)
           Su0[i] = Su_unif[i];
 
         aligned_array<double> u1(n*n);
@@ -186,14 +232,6 @@ int main()
         REQUIRE(ApproxEq(Su0, Su0_seq));
         REQUIRE(NormF(Su1_seq) < 1e-6);
         std::fprintf(stderr, "\033[32;1m OK \033[0m\n");
-      }
-
-      { // Vectorized version
-
-      }
-
-      { // OpenMP, vectorized version
-
       }
     }
   }

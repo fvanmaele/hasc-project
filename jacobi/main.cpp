@@ -7,6 +7,15 @@
 
 using namespace hasc;
 
+template <typename T>
+T unifrnd(const int a, const int b)
+{
+  std::random_device rand_dev;
+  std::mt19937_64 generator(rand_dev());
+  std::uniform_real_distribution<T> distr(a, b);
+  return distr(generator);
+}
+
 void jacobi_vanilla_kernel (int n, int iterations, double* uold, double* unew)
 {
   // do iterations
@@ -45,7 +54,7 @@ int main()
   // Stencil coefficients
     const size_t coeff_n = (2*k+1)*(2*k+1);
     double coeff[coeff_n];
-    model_coefficients_2d<double>(coeff, 2*k+1);
+    model_coefficients_2d(coeff, 2*k+1);
     print_array_2d(coeff, 2*k+1);
     printf("\n");
 //  fill(coeff, coeff_n, 0.0);
@@ -80,7 +89,7 @@ int main()
 //  printf("\n");
 
 
-//  for (int i = 0; i < Scoeff.ssize(); ++i)
+//  for (int i = 0; i < Scoeff.size(); ++i)
 //    printf("%f\n", coeff[i]);
 
 //  iota(u0, nsq, 1);

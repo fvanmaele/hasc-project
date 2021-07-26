@@ -29,19 +29,19 @@ public:
 
   template <size_t alignment>
   constexpr span(const aligned_array<T, alignment>& A)
-    : ptr(A.data()), n(A.ssize()) {}
+    : ptr(A.data()), n(A.size()) {}
 
   template <size_t alignment>
   constexpr span(aligned_array<T, alignment>& A)
-    : ptr(A.data()), n(A.ssize()) {}
+    : ptr(A.data()), n(A.size()) {}
 
   template <size_t N>
   constexpr span(const std::array<T, N>& A)
-    : ptr(A.data()), n(static_cast<ptrdiff_t>(A.size())) {}
+    : ptr(A.data()), n(A.size()) {}
 
   template <size_t N>
   constexpr span(std::array<T, N>& A)
-    : ptr(A.data()), n(static_cast<ptrdiff_t>(A.size())) {}
+    : ptr(A.data()), n(A.size()) {}
 
   constexpr T& operator[](ptrdiff_t idx) const
   {
@@ -52,6 +52,10 @@ public:
     }
 #endif
     return ptr[idx];
+  }
+  constexpr size_t size() const
+  {
+    return static_cast<size_t>(n);
   }
   constexpr ptrdiff_t ssize() const
   {

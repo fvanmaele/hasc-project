@@ -1,4 +1,4 @@
-add_library(seidel INTERFACE seidel.h)
+add_library(seidel INTERFACE seidel.h seidel_par.h)
 target_link_libraries(seidel INTERFACE
     OpenMP::OpenMP_CXX)
 

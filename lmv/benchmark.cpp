@@ -2,7 +2,6 @@
 #include <vector>
 #include "lmv_seq.h"
 #include "lmv_vcl.h"
-#include "aligned_array.h"
 
 using namespace hasc;
 
@@ -24,17 +23,17 @@ void lmv_2d_vanilla(int n, int k, span<const double> u, span<double> mean)
 
 // All benchmarks are identical apart from the called function, use macro
 #define BM_GENERATE(func, ...) \
-  static void BM_##func(benchmark::State& state)  \
+  static void BM_##func (benchmark::State& state)  \
   {                                               \
     size_t n = state.range(0);                    \
     size_t k = state.range(1);                    \
     aligned_array<double, 64> u(n*n);             \
-    iota(u.data(), u.ssize(), 1);                 \
+    iota(u.data(), u.size(), 1);                 \
                                                   \
-    span<const double> Su(u.data(), u.ssize());   \
+    span<const double> Su(u.data(), u.size());   \
     aligned_array<double, 64> lmv(n*n);           \
-    fill(lmv.data(), lmv.ssize(), 0);             \
-    span<double> Smean(lmv.data(), lmv.ssize());  \
+    fill(lmv.data(), lmv.size(), 0);             \
+    span<double> Smean(lmv.data(), lmv.size());  \
                                                   \
     for (auto _ : state) {                        \
       (func<__VA_ARGS__>)(n, k, Su, Smean);       \
@@ -44,11 +43,11 @@ void lmv_2d_vanilla(int n, int k, span<const double> u, span<double> mean)
 
 // Generate benchmark code
 BM_GENERATE(lmv_2d_vanilla)
-BM_GENERATE(lmv_2d_blocked, 4, 64)
+BM_GENERATE(lmv_2d_blocked, 64, 64)
 BM_GENERATE(lmv_2d_vectorized, 4)
 BM_GENERATE(lmv_2d_vectorized_buffered, 4)
-BM_GENERATE(lmv_2d_vectorized_blocked, 4, 64, 4)
-BM_GENERATE(lmv_2d_vectorized_buffered_blocked, 4, 64, 4)
+BM_GENERATE(lmv_2d_vectorized_blocked, 64, 64, 4)
+BM_GENERATE(lmv_2d_vectorized_buffered_blocked, 64, 64, 4)
 
 // Set limits of n and k
 std::vector<std::vector<int64_t>> parameter_range{

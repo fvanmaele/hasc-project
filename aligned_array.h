@@ -13,10 +13,10 @@ struct aligned_array
 {
 private:
   T* __restrict__ ptr;
-  ptrdiff_t n;
+  size_t n;
 
 public:
-  explicit aligned_array(ptrdiff_t n_)
+  explicit aligned_array(size_t n_)
     : ptr(new (std::align_val_t(alignment)) T[n_]), n(n_)
   {}
 
@@ -25,7 +25,10 @@ public:
   aligned_array& operator=(const aligned_array& other) = delete;
   aligned_array(aligned_array&& other) = default;
   aligned_array& operator=(aligned_array&& other) = default;
-  ~aligned_array() { delete[] ptr; }
+
+  ~aligned_array() {
+    delete[] ptr;
+  }
 
   // accessor methods
   constexpr T* data() {
@@ -34,7 +37,7 @@ public:
   constexpr const T* data() const {
     return ptr;
   }
-  constexpr ptrdiff_t ssize() const {
+  constexpr size_t size() const {
     return n;
   }
 };

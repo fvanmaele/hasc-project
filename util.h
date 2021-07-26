@@ -1,7 +1,7 @@
 #ifndef HASC_UTIL_SH
 #define HASC_UTIL_SH
-#include <random>
-#include <cstdlib>
+#include <cstdio>
+#include <cmath>
 
 // row-major index mapping
 // TODO: only define here? (include from other headers that need it)
@@ -13,10 +13,46 @@
 
 namespace hasc
 {
-template <typename T>
-inline void model_coefficients_2d(T* coeff, int n, double factor = 50.0, int m = 100)
+inline void fill(double* x, size_t len, double a)
 {
-  const int k = (n-1)/2;
+  for (size_t i = 0; i < len; ++i)
+    x[i] = a;
+}
+
+inline void iota(double* x, size_t len, int a0 = 1)
+{
+  for (size_t i = 0; i < len; ++i)
+    x[i] = a0++;
+}
+
+inline void print_array_2d(const double* x, int n)
+{
+  for (int i = 0; i < n; ++i)
+  {
+    std::printf("[");
+    for (int j = 0; j < n-1; ++j)
+      std::printf(" %8.4E", x[i*n+j]);
+    std::printf(" %f ]\n", x[i*n+(n-1)]);
+  }
+}
+
+inline bool isfinite_array(const double* x, size_t len)
+{
+  bool finite = true;
+  for (size_t i = 0; i < len; ++i)
+  {
+    if (!std::isfinite(x[i]))
+    {
+      finite = false;
+      break;
+    }
+  }
+  return finite;
+}
+
+inline void model_coefficients_2d(double* coeff, int n, double factor = 50.0, int m = 100)
+{
+  const int k = (n-1)/2; // center at (k, k)
 
   for (int i = 0; i < n; ++i)
     for (int j = 0; j < n; ++j)
@@ -30,40 +66,6 @@ inline void model_coefficients_2d(T* coeff, int n, double factor = 50.0, int m =
       else
         coeff[idx] = 1./(MAX(a_abs, b_abs)*MAX(a_abs, b_abs))/(factor+m);
     }
-}
-
-template <typename T>
-inline T unifrnd(const int a, const int b)
-{
-  std::random_device rand_dev;
-  std::mt19937_64 generator(rand_dev());
-  std::uniform_real_distribution<double> distr(a, b);
-  return distr(generator);
-}
-
-template <typename T>
-inline void fill(T* x, size_t len, T a)
-{
-  for (size_t i = 0; i < len; ++i)
-    x[i] = a;
-}
-
-template <typename T>
-inline void iota(T* x, size_t len, int a0 = 1)
-{
-  for (size_t i = 0; i < len; ++i)
-    x[i] = a0++;
-}
-
-inline void print_array_2d(const double* x, int n)
-{
-  for (int i = 0; i < n; ++i)
-  {
-    printf("[");
-    for (int j = 0; j < n-1; ++j)
-      printf(" %8.4E", x[i*n+j]);
-    printf(" %f ]\n", x[i*n+(n-1)]);
-  }
 }
 
 } // namespace hasc

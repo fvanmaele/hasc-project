@@ -22,11 +22,11 @@ void Require(bool expr, int line)
 
 bool ApproxEq (span<double> a, span<double> b)
 {
-  if (a.ssize() != b.ssize())
+  if (a.size() != b.size())
     return false;
   bool equal = true;
 
-  for (ptrdiff_t i = 0; i < a.ssize(); ++i)
+  for (size_t i = 0; i < a.size(); ++i)
     if (std::abs(a[i]-b[i]) > DBL_EPSILON)
     {
       equal = false;
