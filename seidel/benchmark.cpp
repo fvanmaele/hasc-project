@@ -46,7 +46,7 @@ BM_GENERATE(symmetric_seidel_2d)
 BM_GENERATE(symmetric_seidel_2d_openmp)
 
 std::vector<std::vector<int64_t>> parameter_range{
-  {64, 128, 256, 512, 1024, 2048, 4096}, {1, 3, 5, 7}, {20}
+  {48, 96, 192, 384, 768, 1536, 3072}, {1, 3, 5, 7}, {20}
 };
 
 BENCHMARK(BM_symmetric_seidel_2d)

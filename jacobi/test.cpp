@@ -39,15 +39,6 @@ bool ApproxEq(span<double> a, span<double> b)
   return equal;
 }
 
-// Frobenius norm
-double NormF(span<double> A)
-{
-  double sum = 0;
-  for (auto c : A)
-    sum += c*c;
-  return sqrt(sum);
-}
-
 void jacobi_4point(int n, int iterations, span<double> uold, span<double> unew)
 {
   // do iterations
@@ -169,7 +160,7 @@ int main()
   for (int n = 64; n <= n_lim; n*=2)
   {
     aligned_array<double> u_unif(n*n);
-    span<double> Su_unif(u_unif); // TODO
+    span<double> Su_unif(u_unif);
     unifrnd<double>(1, 10, Su_unif);
 
     for (int k = 1; k <= k_lim; ++k)
@@ -195,7 +186,7 @@ int main()
       // Test convergence of sequential version to zero
       REQUIRE(isfinite_array(u0_seq.data(), u0_seq.size()));
       REQUIRE(isfinite_array(u1_seq.data(), u1_seq.size()));
-      REQUIRE(NormF(Su1_seq) < 1e-6);
+      REQUIRE(NormF(u1_seq.data(), u1_seq.size()) < 1e-6);
       std::fprintf(stderr, "\033[32;1m OK \033[0m\n");
 
       { // Blocked version
@@ -212,7 +203,7 @@ int main()
         jacobi_2d_blocked<32, 128>(n, k, iterations, Su0, Su1, Scoeff);
         REQUIRE(ApproxEq(Su1, Su1_seq));
         REQUIRE(ApproxEq(Su0, Su0_seq));
-        REQUIRE(NormF(Su1_seq) < 1e-6);
+        REQUIRE(NormF(u1.data(), u1.size()) < 1e-6);
         std::fprintf(stderr, "\033[32;1m OK \033[0m\n");
       }
 
@@ -230,7 +221,7 @@ int main()
         jacobi_2d_blocked_openmp<32, 128>(n, k, iterations, Su0, Su1, Scoeff);
         REQUIRE(ApproxEq(Su1, Su1_seq));
         REQUIRE(ApproxEq(Su0, Su0_seq));
-        REQUIRE(NormF(Su1_seq) < 1e-6);
+        REQUIRE(NormF(u1.data(), u1.size()) < 1e-6);
         std::fprintf(stderr, "\033[32;1m OK \033[0m\n");
       }
     }

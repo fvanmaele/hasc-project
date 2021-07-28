@@ -1,3 +1,7 @@
+/// @file seidel.h
+/// @brief Implementation of the symmetric Gauss-Seidel method for general stencils
+/// @author Ferdinand Vanmaele
+
 #ifndef HASC_SEIDEL_H
 #define HASC_SEIDEL_H
 #include <cassert>
@@ -6,6 +10,24 @@
 
 namespace hasc
 {
+inline void model_coefficients_2d(double* coeff, int n, double factor = 50.0, int m = 100)
+{
+  const int k = (n-1)/2; // center at (k, k)
+
+  for (int i = 0; i < n; ++i)
+    for (int j = 0; j < n; ++j)
+    {
+      const int idx = INDEX(i, j, n);
+      const int a_abs = abs(i-k);
+      const int b_abs = abs(j-k);
+
+      if (i == k && j == k) // offset by k
+        coeff[idx] = factor/(factor+m);
+      else
+        coeff[idx] = 1./(MAX(a_abs, b_abs)*MAX(a_abs, b_abs))/(factor+m);
+    }
+}
+
 inline __attribute__((always_inline))
 void symmetric_seidel_2d_forward(int i0, int i1, int j0, int j1, int n, int k,
                                  span<double> u, span<const double> coeff)
@@ -111,11 +133,14 @@ inline void symmetric_seidel_2d_inexact(int n, int k, int iterations, span<doubl
 inline void symmetric_seidel_2d_openmp(int n, int k, int iterations, span<double> u,
                                        span<const double> coeff)
 {
-  // Assumed divisiblity constraints
-  //assert(n % (k+1) == 0);
+  // Divisiblity constraints, doesn't work otherwise!
+  if(n % (k+1) != 0){
+    fprintf(stderr, "n must be divisible by k+1");
+    std::terminate();
+  }
 
   const int max_width = k+1;
-  const int max_height = n/(k+1);
+  const int max_height = n/max_width;
   // total number of spaced diagonals
   const int s_diag_total = n + (n-(k+1))/(k+1);
   // number of spaced diagonals that can be processed in parallel
@@ -170,8 +195,6 @@ inline void symmetric_seidel_2d_openmp(int n, int k, int iterations, span<double
 
     // process last diagonal sequentially
     symmetric_seidel_2d_forward(n-1, n, n-max_width, n, n, k, u, coeff);
-
-    // process last diagonal sequentially
     symmetric_seidel_2d_backward(n, n-1, n, n-max_width, n, k, u, coeff);
 
     --step;

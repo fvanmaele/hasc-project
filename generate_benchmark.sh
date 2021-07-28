@@ -8,6 +8,7 @@ MJ_step=16
 filename=benchmark_blocked.cpp
 
 { cat <<EOF
+// created by generate_benchmark.sh
 #include <benchmark/benchmark.h>
 #include <vector>
 #include "lmv_seq.h"

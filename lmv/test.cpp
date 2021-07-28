@@ -3,7 +3,6 @@
 #include <memory>
 #include "lmv_seq.h"
 #include "lmv_vcl.h"
-#include "aligned_array.h"
 
 #define REQUIRE(expr) Require(expr, __LINE__)
 

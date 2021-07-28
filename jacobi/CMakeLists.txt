@@ -9,6 +9,7 @@ target_link_libraries(jacobi_main PRIVATE
 add_executable(jacobi_test test.cpp)
 target_link_libraries(jacobi_test PRIVATE
     jacobi utility)
+add_test(jacobi_test jacobi_test)
 
 add_executable(jacobi_benchmark benchmark.cpp)
 target_link_libraries(jacobi_benchmark PRIVATE

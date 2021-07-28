@@ -88,3 +88,10 @@ target_link_libraries(utility INTERFACE
 add_subdirectory("lmv")
 add_subdirectory("jacobi")
 add_subdirectory("seidel")
+
+# Tests
+include(CTest)
+enable_testing()
+add_test(NAME jacobi COMMAND jacobi_test)
+add_test(NAME lmv COMMAND lmv_test)
+add_test(NAME seidel COMMAND seidel_test)

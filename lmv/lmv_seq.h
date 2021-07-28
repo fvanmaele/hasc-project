@@ -1,22 +1,15 @@
-/// @file
-/// @brief Sequential algorithms for computing local mean value
+/// @file lmv_seq.h
+/// @brief Implementation of the local mean value (sequential version)
 /// @author Ferdinand Vanmaele
 
 #ifndef HASC_LMV_SEQ_H
 #define HASC_LMV_SEQ_H
 #include <cassert>
 #include "span.h"
-
-// row-major index mapping
-#define INDEX(i, j, n) ((i)*n+(j))
-
-// minimum and maximum value
-#define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
-#define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
+#include "util.h"
 
 namespace hasc
 {
-
 // Version with dynamic bounds, suitable for boundary points
 inline void lmv_2d_kernel(int i0, int i1, int j0, int j1, int n, int k,
                           span<const double> u, span<double> mean)
@@ -49,7 +42,6 @@ inline void lmv_2d(int n, int k, span<const double> u, span<double> mean)
   lmv_2d_kernel(0, n, 0, n, n, k, u, mean);
 }
 
-// Basic blocked version which does not distinguish between outer and inner blocks.
 template <int MI, int MJ>
 inline void lmv_2d_blocked(int n, int k, span<const double> u, span<double> mean)
 {

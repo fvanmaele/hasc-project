@@ -4,7 +4,6 @@
 
 #ifndef HASC_SPAN_H
 #define HASC_SPAN_H
-#include <cstddef>
 #include <cmath>
 #include <array>
 #include "aligned_array.h"

@@ -1,5 +1,5 @@
 /// @file aligned_array.h
-/// @brief
+/// @brief Dynamically allocated array with variable alignment
 /// @author Ferdinand Vanmaele
 
 #ifndef HASC_ALIGNED_ARRAY_H

@@ -1,73 +1,58 @@
 #include <cstdio>
-#define HASC_SPAN_CHECKED // for debugging purposes
+#include <cstring>
 #include "lmv_seq.h"
 #include "lmv_vcl.h"
-#include "aligned_array.h"
+#include "util.h"
+#define SIMD_WIDTH 4
 
 using namespace hasc;
 
-void print_2d_array(const double* x, int n)
+void usage(const char* progn)
 {
-  for (int i = 0; i < n; ++i)
+  std::fprintf(stderr, "%s <size> <radius> [seq|vcl1|vcl2]\n", progn);
+  std::exit(1);
+}
+
+int main(int argc, char* argv[])
+{
+  int n = 1024;
+  int k = 1;
+  char mode[16];
+
+  // Retrieve arguments
+  if (argc < 4)
+    usage(argv[0]);
+  else
   {
-    printf("[");
-    for (int j = 0; j < n-1; ++j)
-      printf(" %8.3f", x[i*n+j]);
-    printf(" %f ]\n", x[i*n+(n-1)]);
+    if (std::sscanf(argv[1], "%d", &n) != 1)
+      usage(argv[0]);
+    if (std::sscanf(argv[2], "%d", &k) != 1)
+      usage(argv[0]);
+    if (std::sscanf(argv[3], "%4s", mode) != 1)
+      usage(argv[0]);
   }
-}
 
-void fill(double* x, size_t len, int a)
-{
-  for (size_t i = 0; i < len; ++i)
-    x[i] = a;
-}
+  // Generate input/output arrays
+  aligned_array<double, 64> u(n*n);
+  iota(u.data(), u.size(), 1);
+  span<const double> Su(u.data(), u.size());
 
-void iota(double* x, size_t len, int a0 = 1)
-{
-  for (size_t i = 0; i < len; ++i)
-    x[i] = a0++;
-}
+  aligned_array<double, 64> mean(n*n);
+  fill(mean.data(), mean.size(), 0);
+  span<double> Smean(mean);
 
-int main() {
-  const int n = 8;
-  const size_t nsq = n*n;
-  const int k = 1;
-  double u[nsq];
-  iota(u, nsq, 1);
+  // Compute local mean value
+  const char* mode_cmp = mode;
+  if(std::strncmp(mode_cmp, "seq", 3) == 0)
+    lmv_2d(n, k, Su, Smean);
+  else if (std::strncmp(mode_cmp, "vcl1", 4) == 0)
+    lmv_2d_vectorized<SIMD_WIDTH>(n, k, Su, Smean);
+  else if (std::strncmp(mode_cmp, "vcl2", 4) == 0)
+    lmv_2d_vectorized_buffered<SIMD_WIDTH>(n, k, Su, Smean);
+  else
+    usage(argv[0]);
 
-  span<const double> Su(u, nsq);
-  print_2d_array(u, n);
-  printf("\n");
-
-  double mean[nsq];
-  span<double> Smean(mean, nsq);
-
-  // Vanilla version
-  lmv_2d(n, k, Su, Smean);
-  print_2d_array(mean, n);
-  printf("\n");
-
-  // Blocked version
-  fill(mean, nsq, 0);
-  lmv_2d_blocked<4, 4>(n, k, Su, Smean);
-  print_2d_array(mean, n);
-  printf("\n");
-
-  // Vectorized version
-  fill(mean, nsq, 0);
-  lmv_2d_vectorized<4>(n, k, Su, Smean);
-  print_2d_array(mean, n);
-  printf("\n");
-
-  // Block vectorized version
-  fill(mean, nsq, 0);
-  lmv_2d_vectorized_blocked<4, 4, 4>(n, k, Su, Smean);
-  print_2d_array(mean, n);
-  printf("\n");
-
-  // Vectorized version (2)
-  fill(mean, nsq, 0);
-  lmv_2d_vectorized_buffered<4>(n, k, Su, Smean);
-  print_2d_array(mean, n);
+#ifdef LMV_PRINT_VALUES
+  print_array_2d(u.data(), n);
+#endif
 }

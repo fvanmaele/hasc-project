@@ -5,16 +5,6 @@
 
 using namespace hasc;
 
-// Helper functions
-void fill(double* x, size_t len, int a)
-{
-  memset(x, a, sizeof(double)*len);
-}
-void iota(double* x, size_t len, int a0)
-{
-  for (size_t i = 0; i < len; ++i)
-    x[i] = a0++;
-}
 template <typename... Args>
 void lmv_2d_vanilla(int n, int k, span<const double> u, span<double> mean)
 {
@@ -43,11 +33,11 @@ void lmv_2d_vanilla(int n, int k, span<const double> u, span<double> mean)
 
 // Generate benchmark code
 BM_GENERATE(lmv_2d_vanilla)
-BM_GENERATE(lmv_2d_blocked, 64, 64)
+BM_GENERATE(lmv_2d_blocked, 4, 64)
 BM_GENERATE(lmv_2d_vectorized, 4)
 BM_GENERATE(lmv_2d_vectorized_buffered, 4)
-BM_GENERATE(lmv_2d_vectorized_blocked, 64, 64, 4)
-BM_GENERATE(lmv_2d_vectorized_buffered_blocked, 64, 64, 4)
+BM_GENERATE(lmv_2d_vectorized_blocked, 4, 64, 4)
+BM_GENERATE(lmv_2d_vectorized_buffered_blocked, 4, 64, 4)
 
 // Set limits of n and k
 std::vector<std::vector<int64_t>> parameter_range{

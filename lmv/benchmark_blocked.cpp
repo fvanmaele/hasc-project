@@ -1,3 +1,4 @@
+// created by generate_benchmark.sh
 #include <benchmark/benchmark.h>
 #include <vector>
 #include "lmv_seq.h"

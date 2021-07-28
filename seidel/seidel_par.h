@@ -7,10 +7,18 @@
 namespace hasc
 {
 inline __attribute__((always_inline))
-double symmetric_seidel_2d_kernel(int n, int a_begin, int a_end, int b_begin, int b_end,
-                                  int n_coeff, int coeff_a_begin, int coeff_b_begin,
+double symmetric_seidel_2d_kernel(int n, int k, int i, int j,
                                   span<double> u, span<const double> coeff)
 {
+  const int n_coeff = 2*k+1;
+  const int a_begin = MAX(i-k, 0);
+  const int a_end = MIN(i+k, n-1);
+  const int coeff_a_begin = MAX(a_begin-i+k, 0);
+
+  const int b_begin = MAX(j-k, 0);
+  const int b_end = MIN(j+k, n-1);
+  const int coeff_b_begin = MAX(b_begin-j+k, 0);
+
   double tmp = 0;
   for (int a = a_begin, coeff_a = coeff_a_begin; a <= a_end; ++a, ++coeff_a)
   {

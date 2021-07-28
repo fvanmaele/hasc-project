@@ -1,5 +1,5 @@
-/// @file
-/// @brief Vectorized algorithms for computing local mean value
+/// @file lmv_vcl.h
+/// @brief Implementation of the local mean value (vectorized version)
 /// @author Ferdinand Vanmaele
 
 #ifndef HASC_LMV_VCL_H
@@ -8,13 +8,7 @@
 #include <cassert>
 #include "span.h"
 #include "simd_selector.h"
-
-// row-major index mapping
-#define INDEX(i, j, n) ((i)*n+(j))
-
-// minimum and maximum value
-#define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
-#define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
+#include "util.h"
 
 namespace hasc
 {
@@ -65,7 +59,6 @@ inline void lmv_2d_vectorized(int n, int k, span<const double> u, span<double> m
   lmv_2d_vectorized_kernel<W>(0, n, 0, n, n, k, u, mean);
 }
 
-// Basic blocked version which does not distinguish between outer and inner blocks.
 template <int MI, int MJ, int W>
 inline void lmv_2d_vectorized_blocked(int n, int k, span<const double> u, span<double> mean)
 {

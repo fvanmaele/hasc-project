@@ -1,3 +1,7 @@
+/// @file jacobi.h
+/// @brief Implementation of the Jacobi method for general stencils
+/// @author Ferdinand Vanmaele
+
 #ifndef HASC_JACOBI_H
 #define HASC_JACOBI_H
 #include <cassert>
@@ -6,6 +10,24 @@
 
 namespace hasc
 {
+inline void model_coefficients_2d(double* coeff, int n, double factor = 50.0, int m = 100)
+{
+  const int k = (n-1)/2; // center at (k, k)
+
+  for (int i = 0; i < n; ++i)
+    for (int j = 0; j < n; ++j)
+    {
+      const int idx = INDEX(i, j, n);
+      const int a_abs = abs(i-k);
+      const int b_abs = abs(j-k);
+
+      if (i == k && j == k) // offset by k
+        coeff[idx] = factor/(factor+m);
+      else
+        coeff[idx] = 1./(MAX(a_abs, b_abs)*MAX(a_abs, b_abs))/(factor+m);
+    }
+}
+
 inline void jacobi_2d_kernel(int i0, int i1, int j0, int j1, int n, int k,
                              span<double> uold, span<double> unew, span<const double> coeff)
 {
@@ -79,7 +101,7 @@ inline void jacobi_2d_blocked(int n, int k, int iterations, span<double> uold, s
 
 template <int MI, int MJ>
 inline void jacobi_2d_blocked_openmp(int n, int k, int iterations, span<double> uold, span<double> unew,
-                                    span<const double> coeff)
+                                     span<const double> coeff)
 {
   for (int it = 1; it <= iterations; ++it)
   {

@@ -1,9 +1,8 @@
 #include <cstdio>
+#include <cstring>
 #include <random>
-#define HASC_SPAN_CHECKED // for debugging purposes
+#include <omp.h>
 #include "seidel.h"
-#include "seidel_par.h"
-#include "util.h"
 
 using namespace hasc;
 
@@ -16,53 +15,57 @@ T unifrnd(const int a, const int b)
   return distr(generator);
 }
 
-// Frobenius norm
-double NormF(span<double> A)
+void usage(const char* progn)
 {
-  double sum = 0;
-  for (auto c : A)
-    sum += c*c;
-  return sqrt(sum);
+  std::fprintf(stderr, "%s <size> <radius> <iterations> [seq|omp]\n", progn);
+  std::exit(1);
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-  const int n = 7;
-  const size_t nsq = n*n;
-  const int k = 2;
-  const int iterations = 10;
+  int n = 1024;
+  int k = 1;
+  int iterations = 10;
+  char mode[16];
 
-  // Initial guess u_0
-  double u_unif[nsq];
-  //iota(u0, nsq, 1);
-  for (size_t i = 0; i < nsq; ++i)
-    u_unif[i] = unifrnd<double>(1, 10);
+  // Retrieve arguments
+  if (argc < 5)
+    usage(argv[0]);
+  else
+  {
+    if (std::sscanf(argv[1], "%d", &n) != 1)
+      usage(argv[0]);
+    if (std::sscanf(argv[2], "%d", &k) != 1)
+      usage(argv[0]);
+    if (std::sscanf(argv[3], "%d", &iterations) != 1)
+      usage(argv[0]);
+    if (std::sscanf(argv[4], "%4s", mode) != 1)
+      usage(argv[0]);
+  }
 
-  double u[nsq];
-  for (size_t i = 0; i < nsq; ++i)
-    u[i] = u_unif[i];
-  span<double> Su(u, nsq);
+  // Generate input/output arrays
+  aligned_array<double, 64> u(n*n);
+  span<double> Su(u);
+  for (size_t i = 0; i < Su.size(); ++i)
+    Su[i] = unifrnd<double>(1, 10);
 
-  // Stencil coefficients
-  const size_t coeff_n = (2*k+1)*(2*k+1);
-  double coeff[coeff_n];
-  model_coefficients_2d(coeff, 2*k+1);
-  print_array_2d(coeff, 2*k+1);
-  printf("\n");
-
-  span<const double> Scoeff(coeff, coeff_n);
+  // Generate coefficients
+  aligned_array<double, 64> coeff((2*k+1)*(2*k+1));
+  model_coefficients_2d(coeff.data(), 2*k+1);
+  span<const double> Scoeff(coeff.data(), coeff.size());
 
   // Symmetric Gauss-Seidel iteration
-  symmetric_seidel_2d(n, k, iterations, Su, Scoeff);
-  //print_array_2d(u, n);
-  double norm_vanilla = NormF(Su);
+  const char* mode_cmp = mode;
+  if(std::strncmp(mode_cmp, "seq", 3) == 0)
+    symmetric_seidel_2d(n, k, iterations, Su, Scoeff);
+  else if (std::strncmp(mode_cmp, "omp", 3) == 0)
+    symmetric_seidel_2d_openmp(n, k, iterations, Su, Scoeff);
+  else
+    usage(argv[0]);
 
-  for (size_t i = 0; i < nsq; ++i)
-    u[i] = u_unif[i]; // reinitialize
-  //symmetric_seidel_2d_blocked_inexact<4, 4>(n, k, iterations, Su, Scoeff);
-  symmetric_seidel_2d_openmp(n, k, iterations, Su, Scoeff);
-  print_array_2d(u, n);
-  printf("Norm: %E\n", norm_vanilla);
-  printf("Norm: %E\n", NormF(Su));
-  //printf("\n");
+  printf("Frobenius norm: %E\n", NormF(u.data(), u.size()));
+
+#ifdef LMV_PRINT_VALUES
+  print_array_2d(u1.data(), n);
+#endif
 }
