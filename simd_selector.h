@@ -5,7 +5,7 @@
 #ifndef HASC_SIMDSELECTOR_H
 #define HASC_SIMDSELECTOR_H
 #include <cstddef>
-#include <vectorclass.h>
+#include "vcl/vectorclass.h"
 
 namespace hasc
 {

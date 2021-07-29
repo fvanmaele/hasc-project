@@ -5,16 +5,25 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-find_package(benchmark CONFIG REQUIRED)
-#find_package(TBB REQUIRED)
 find_package(OpenMP REQUIRED)
-#find_package(fmt CONFIG REQUIRED)
-find_package(vectorclass REQUIRED)
-#find_package(Catch2 CONFIG REQUIRED)
+#find_package(benchmark CONFIG REQUIRED)
+#find_package(TBB REQUIRED)
+#find_package(vectorclass REQUIRED)
+
+# Bundled libraries
+set(OPT_USE_BUNDLED_BENCHMARK ON)
+
+if (OPT_USE_BUNDLED_BENCHMARK)
+    set(BENCHMARK_ENABLE_TESTING OFF)
+    set(BENCHMARK_ENABLE_INSTALL OFF)
+    add_subdirectory("benchmark")
+else()
+    find_package(benchmark CONFIG REQUIRED)
+endif()
 
 # Define optimization levels
 set(OPT_VEC_REPORT OFF)
-set(OPT_FAST_MATH ON)
+set(OPT_FAST_MATH OFF)
 set(OPT_TSAN OFF)
 set(OPT_ASAN OFF)
 
@@ -81,9 +90,10 @@ endif()
 # Project
 include_directories(${CMAKE_SOURCE_DIR})
 
-add_library(utility INTERFACE simd_selector.h span.h aligned_array.h util.h)
-target_link_libraries(utility INTERFACE
-    vectorclass::vectorclass)
+add_library(utility INTERFACE 
+    simd_selector.h span.h aligned_array.h util.h)
+#target_link_libraries(utility INTERFACE
+#    vectorclass::vectorclass)
 
 add_subdirectory("lmv")
 add_subdirectory("jacobi")
@@ -92,6 +102,7 @@ add_subdirectory("seidel")
 # Tests
 include(CTest)
 enable_testing()
+
 add_test(NAME jacobi COMMAND jacobi_test)
 add_test(NAME lmv COMMAND lmv_test)
 add_test(NAME seidel COMMAND seidel_test)
