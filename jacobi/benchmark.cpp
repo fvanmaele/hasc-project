@@ -32,9 +32,9 @@ void jacobi_2d_vanilla(int n, int k, int iterations, span<double> uold, span<dou
 #define BM_GENERATE(func, ...)                              \
   static void BM_##func(benchmark::State& state)            \
   {                                                         \
-    size_t n = state.range(0);                              \
-    size_t k = state.range(1);                              \
-    size_t t = state.range(2);                              \
+    int64_t n = state.range(0);                              \
+    int64_t k = state.range(1);                              \
+    int64_t t = state.range(2);                              \
                                                             \
     aligned_array<double, 64> u0(n*n);                      \
     aligned_array<double, 64> u1(n*n);                      \

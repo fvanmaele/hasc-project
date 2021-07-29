@@ -24,9 +24,9 @@ void unifrnd_array(T* x, size_t x_len, int a, int b)
 #define BM_GENERATE(func, ...)                              \
   static void BM_##func(benchmark::State& state)            \
   {                                                         \
-    size_t n = state.range(0);                              \
-    size_t k = state.range(1);                              \
-    size_t t = state.range(2);                              \
+    int64_t n = state.range(0);                              \
+    int64_t k = state.range(1);                              \
+    int64_t t = state.range(2);                              \
                                                             \
     aligned_array<double, 64> u(n*n);                       \
     unifrnd_array(u.data(), u.size(), -1, 1);               \

@@ -12,7 +12,7 @@ template <typename T, size_t alignment = 64>
 struct aligned_array
 {
 private:
-  T* __restrict__ ptr;
+  T* __restrict ptr;
   size_t n;
 
 public:

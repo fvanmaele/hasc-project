@@ -33,7 +33,7 @@ bool ApproxEq(span<double> a, span<double> b)
     if (std::abs(a[i]-b[i]) > DBL_EPSILON)
     {
       equal = false;
-      std::fprintf(stderr, "%ld (i), %f (a), %f (b)\n", i, a[i], b[i]);
+      std::fprintf(stderr, "%zu (i), %f (a), %f (b)\n", i, a[i], b[i]);
       break;
     }
   return equal;
@@ -100,17 +100,18 @@ int main()
   for (int n = 64; n <= n_lim; n*=2)
   {
     std::fprintf(stderr, "4-point, n = %d\t", n);
-    aligned_array<double> u0_4point(n*n);
+    const size_t u_size = (size_t)n * n;
+    aligned_array<double> u0_4point(u_size);
     span<double> Su0_4point(u0_4point);
-    aligned_array<double> u1_4point(n*n);
+    aligned_array<double> u1_4point(u_size);
     span<double> Su1_4point(u1_4point);
 
     jacobi_4point_init(n, Su0_4point);
     jacobi_4point(n, iterations, Su0_4point, Su1_4point);
 
-    aligned_array<double> u0(n*n);
+    aligned_array<double> u0(u_size);
     span<double> Su0(u0);
-    aligned_array<double> u1(n*n);
+    aligned_array<double> u1(u_size);
     span<double> Su1(u1);
 
     jacobi_4point_init(n, Su0);
@@ -137,12 +138,13 @@ int main()
     const int k = 1;
     const int iterations = 5;
     std::fprintf(stderr, "Boundary values, n = %d\t", n);
+    const size_t u_size = (size_t)n * n;
 
-    aligned_array<double> u0(n*n);
+    aligned_array<double> u0(u_size);
     span<double> Su0(u0);
     iota(Su0.data(), Su0.size(), 1);
 
-    aligned_array<double> u1(n*n);
+    aligned_array<double> u1(u_size);
     span<double> Su1(u1);
 
     std::array<double, 9> coeff {
@@ -168,7 +170,8 @@ int main()
   // Test parallel implementation against sequential version
   for (int n = 64; n <= n_lim; n*=2)
   {
-    aligned_array<double> u_unif(n*n);
+    const size_t u_size = (size_t)n * n;
+    aligned_array<double> u_unif(u_size);
     span<double> Su_unif(u_unif);
     unifrnd<double>(1, 10, Su_unif);
 
@@ -183,12 +186,12 @@ int main()
       REQUIRE(isfinite_array(coeff.data(), coeff.size()));
 
       // Prepare input data
-      aligned_array<double> u0_seq(n*n);
+      aligned_array<double> u0_seq(u_size);
       span<double> Su0_seq(u0_seq);
       for (size_t i = 0; i < Su0_seq.size(); ++i)
         Su0_seq[i] = Su_unif[i];
 
-      aligned_array<double> u1_seq(n*n);
+      aligned_array<double> u1_seq(u_size);
       span<double> Su1_seq(u1_seq);      
       jacobi_2d(n, k, iterations, Su0_seq, Su1_seq, Scoeff);
 
@@ -201,12 +204,12 @@ int main()
       { // Blocked version
         std::fprintf(stderr, "Blocked, n = %-4d, k = %-1d\t", n, k);
 
-        aligned_array<double> u0(n*n);
+        aligned_array<double> u0(u_size);
         span<double> Su0(u0);
         for (size_t i = 0; i < Su0.size(); ++i)
           Su0[i] = Su_unif[i];
 
-        aligned_array<double> u1(n*n);
+        aligned_array<double> u1(u_size);
         span<double> Su1(u1);
 
         jacobi_2d_blocked<32, 128>(n, k, iterations, Su0, Su1, Scoeff);
@@ -219,12 +222,12 @@ int main()
       { // OpenMP version
         std::fprintf(stderr, "OpenMP,  n = %-4d, k = %-1d\t", n, k);
 
-        aligned_array<double> u0(n*n);
+        aligned_array<double> u0(u_size);
         span<double> Su0(u0);
         for (size_t i = 0; i < Su0.size(); ++i)
           Su0[i] = Su_unif[i];
 
-        aligned_array<double> u1(n*n);
+        aligned_array<double> u1(u_size);
         span<double> Su1(u1);
 
         jacobi_2d_blocked_openmp<32, 128>(n, k, iterations, Su0, Su1, Scoeff);
@@ -235,6 +238,6 @@ int main()
       }
     }
   }
-  std::printf("Ran %lu tests successfully\n", test_n);
+  std::printf("Ran %zu tests successfully\n", test_n);
   return 0;
 }

@@ -12,7 +12,7 @@ All programs can be compiled with cmake:
 ```
 Requirements:
 - cmake >=3.12
-- C++17 compiler (tested with GCC 10.2)
+- C++17 compiler (tested with GCC 10.2 and MSVC 2019)
 
 The `benchmark` and `vectorclass` libraries are included as submodules. A
 system version of `benchmark` can be used to reduce compile times by setting

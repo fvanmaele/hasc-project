@@ -2,13 +2,13 @@
 /// @brief Various utility functions
 /// @author Ferdinand Vanmaele
 
-#ifndef HASC_UTIL_SH
-#define HASC_UTIL_SH
+#ifndef HASC_UTIL_H
+#define HASC_UTIL_H
 #include <cstdio>
 #include <cmath>
 
 // row-major index mapping
-#define INDEX(i, j, n) ((i)*n+(j))
+#define INDEX(i, j, n)  ((i)*(size_t)n + (j))
 
 // minimum and maximum value
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
@@ -64,4 +64,4 @@ inline double NormF(const double* x, size_t len)
 
 } // namespace hasc
 
-#endif // HASC_UTIL_SH
+#endif // HASC_UTIL_H

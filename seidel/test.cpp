@@ -33,7 +33,7 @@ bool ApproxEq(span<double> a, span<double> b)
     if (std::abs(a[i]-b[i]) > DBL_EPSILON)
     {
       equal = false;
-      std::fprintf(stderr, "%ld (i), %f (a), %f (b)\n", i, a[i], b[i]);
+      std::fprintf(stderr, "%zu (i), %f (a), %f (b)\n", i, a[i], b[i]);
       break;
     }
   return equal;
@@ -97,13 +97,14 @@ int main()
   for (int n = 48; n <= n_lim; n*=2)
   {
     std::fprintf(stderr, "4-point, n = %d\t", n);
-    aligned_array<double> u_4point(n*n);
+    const size_t u_size = (size_t)n * n;
+    aligned_array<double> u_4point(u_size);
     span<double> Su_4point(u_4point);
 
     seidel_4point_init(n, Su_4point);
     seidel_4point(n, iterations, Su_4point);
 
-    aligned_array<double> u(n*n);
+    aligned_array<double> u(u_size);
     span<double> Su(u);
 
     seidel_4point_init(n, Su);
@@ -123,8 +124,9 @@ int main()
     const int k = 1;
     const int iterations = 5;
     std::fprintf(stderr, "Boundary values, n = %d\t", n);
+    const size_t u_size = (size_t)n * n;
 
-    aligned_array<double> u(n*n);
+    aligned_array<double> u(u_size);
     span<double> Su(u);
     iota(Su.data(), Su.size(), 1);
 
@@ -150,14 +152,17 @@ int main()
   // Compare parallel against sequential version
   for (int n = 48; n <= n_lim; n*=2)
   {
-    aligned_array<double> u_unif(n*n);
+    const size_t u_size = (size_t)n * n;
+    aligned_array<double> u_unif(u_size);
     span<double> Su_unif(u_unif);
     unifrnd<double>(1, 10, Su_unif);
 
     for (int k = 1; k <= k_lim; k+=k_step)
     {
       std::fprintf(stderr, "Vanilla, n = %-4d, k = %-1d\t", n, k);
-      aligned_array<double> coeff((2*k+1)*(2*k+1));
+      const size_t coeff_size = (2*k+1)*(2*k+1);
+      aligned_array<double> coeff(coeff_size);
+      
       model_coefficients_2d(coeff.data(), 2*k+1);
       span<const double> Scoeff(coeff.data(), coeff.size());
 
@@ -165,13 +170,14 @@ int main()
       REQUIRE(isfinite_array(coeff.data(), coeff.size()));
 
       // Prepare input data
-      aligned_array<double> u_seq(n*n);
+      aligned_array<double> u_seq(u_size);
       span<double> Su_seq(u_seq);
       for (size_t i = 0; i < Su_seq.size(); ++i)
         Su_seq[i] = Su_unif[i];
 
       // Test convergence of sequential version to zero
       symmetric_seidel_2d(n, k, iterations, Su_seq, Scoeff);
+      
       REQUIRE(isfinite_array(u_seq.data(), u_seq.size()));
       REQUIRE(NormF(u_seq.data(), u_seq.size()) < 1e-6);
       std::fprintf(stderr, "\033[32;1m OK \033[0m\n");
@@ -179,9 +185,9 @@ int main()
       { // Parallel version
         std::fprintf(stderr, "OpenMP,  n = %-4d, k = %-1d\t", n, k);
 
-        aligned_array<double> u(n*n);
+        aligned_array<double> u(u_size);
         span<double> Su(u);
-        for (size_t i = 0; i < Su.size(); ++i)
+        for (size_t i = 0; i < u.size(); ++i)
           Su[i] = Su_unif[i];
 
         symmetric_seidel_2d_openmp(n, k, iterations, Su, Scoeff);
@@ -191,6 +197,6 @@ int main()
       }
     }
   }
-  std::printf("Ran %lu tests successfully\n", test_n);
+  std::printf("Ran %zu tests successfully\n", test_n);
   return 0;
 }

@@ -44,7 +44,8 @@ int main(int argc, char* argv[])
   }
 
   // Generate input/output arrays
-  aligned_array<double, 64> u(n*n);
+  const size_t u_size = (size_t)n * n;
+  aligned_array<double, 64> u(u_size);
   span<double> Su(u);
   for (size_t i = 0; i < Su.size(); ++i)
     Su[i] = unifrnd<double>(1, 10);

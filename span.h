@@ -19,7 +19,7 @@ template <typename T>
 class span
 {
 private:
-  T *__restrict__ ptr;
+  T *__restrict ptr;
   ptrdiff_t n;
 
 public:
@@ -46,7 +46,7 @@ public:
   {
 #ifdef HASC_SPAN_CHECKED
     if (idx < 0 || idx >= n) {
-      fprintf(stderr, "invalid index access (idx = %ld, n = %ld)\n", idx, n);
+      fprintf(stderr, "invalid index access (idx = %td, n = %td)\n", idx, n);
       abort();
     }
 #endif

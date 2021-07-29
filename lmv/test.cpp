@@ -29,7 +29,7 @@ bool ApproxEq (span<double> a, span<double> b)
     if (std::abs(a[i]-b[i]) > DBL_EPSILON)
     {
       equal = false;
-      std::fprintf(stderr, "%ld (i), %f (a), %f (b)\n", i, a[i], b[i]);
+      std::fprintf(stderr, "%zu (i), %f (a), %f (b)\n", i, a[i], b[i]);
       break;
     }
   return equal;
@@ -43,7 +43,7 @@ int main()
 
   for (int n = 64; n <= lim_n; n*=2)
   {
-    const size_t u_size = n*n;
+    const size_t u_size = (size_t)n * n;
     std::unique_ptr<double> u(new double[u_size]);
     for (size_t i = 0; i < u_size; ++i) {
       u.get()[i] = i+1;
@@ -100,5 +100,5 @@ int main()
     }
     fprintf(stderr, "\033[32;1m OK \033[0m\n");
   }
-  std::printf("Ran %lu tests successfully\n", test_n);
+  std::printf("Ran %zu tests successfully\n", test_n);
 }

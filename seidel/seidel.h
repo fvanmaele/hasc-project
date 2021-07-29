@@ -7,6 +7,9 @@
 #include <cassert>
 #include "span.h"
 #include "util.h"
+#ifdef __GNUG__
+#define __forceinline __attribute__((always_inline))
+#endif
 
 namespace hasc
 {
@@ -17,7 +20,7 @@ inline void model_coefficients_2d(double* coeff, int n, double factor = 50.0, in
   for (int i = 0; i < n; ++i)
     for (int j = 0; j < n; ++j)
     {
-      const int idx = INDEX(i, j, n);
+      const size_t idx = INDEX(i, j, n);
       const int a_abs = abs(i-k);
       const int b_abs = abs(j-k);
 
@@ -28,7 +31,7 @@ inline void model_coefficients_2d(double* coeff, int n, double factor = 50.0, in
     }
 }
 
-inline __attribute__((always_inline))
+inline __forceinline
 void symmetric_seidel_2d_forward(int i0, int i1, int j0, int j1, int n, int k,
                                  span<double> u, span<const double> coeff)
 {
@@ -63,7 +66,7 @@ void symmetric_seidel_2d_forward(int i0, int i1, int j0, int j1, int n, int k,
 }
 
 // Only the loop bounds change in this version, the rest is the same...
-inline __attribute__((always_inline))
+inline __forceinline
 void symmetric_seidel_2d_backward(int i1, int i0, int j1, int j0, int n, int k,
                                          span<double> u, span<const double> coeff)
 {

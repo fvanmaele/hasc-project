@@ -17,7 +17,7 @@ inline void model_coefficients_2d(double* coeff, int n, double factor = 50.0, in
   for (int i = 0; i < n; ++i)
     for (int j = 0; j < n; ++j)
     {
-      const int idx = INDEX(i, j, n);
+      const size_t idx = INDEX(i, j, n);
       const int a_abs = abs(i-k);
       const int b_abs = abs(j-k);
 

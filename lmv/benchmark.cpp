@@ -15,8 +15,8 @@ void lmv_2d_vanilla(int n, int k, span<const double> u, span<double> mean)
 #define BM_GENERATE(func, ...) \
   static void BM_##func (benchmark::State& state)  \
   {                                               \
-    size_t n = state.range(0);                    \
-    size_t k = state.range(1);                    \
+    int64_t n = state.range(0);                    \
+    int64_t k = state.range(1);                    \
     aligned_array<double, 64> u(n*n);             \
     iota(u.data(), u.size(), 1);                 \
                                                   \
