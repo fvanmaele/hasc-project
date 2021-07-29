@@ -1,0 +1,6 @@
+[submodule "vcl"]
+	path = vcl
+	url = https://github.com/vectorclass/version2
+[submodule "benchmark"]
+	path = benchmark
+	url = https://github.com/google/benchmark

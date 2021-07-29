@@ -37,7 +37,7 @@ bool ApproxEq (span<double> a, span<double> b)
 
 int main()
 {
-  const int lim_n = 4096;
+  const int lim_n = 1024;
   const int lim_k = 5;
   std::fprintf(stderr, "Ranges: n = 64 .. %d, k = 1 .. %d\n", lim_n, lim_k);
 

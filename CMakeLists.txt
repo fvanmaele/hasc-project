@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.12)
-project(hasc)
+project(hasc-project-vanmaele)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -14,7 +14,7 @@ find_package(vectorclass REQUIRED)
 
 # Define optimization levels
 set(OPT_VEC_REPORT OFF)
-set(OPT_FAST_MATH OFF)
+set(OPT_FAST_MATH ON)
 set(OPT_TSAN OFF)
 set(OPT_ASAN OFF)
 

@@ -88,6 +88,7 @@ int main()
 {
   const int n_lim = 256;
   const int k_lim = 5;
+  const int k_step = 2;
   const int iterations = 100;
 
   // Test sequential version against 4-point stencil of lecture
@@ -123,15 +124,19 @@ int main()
 
     REQUIRE(ApproxEq(Su0_4point, Su0));
     REQUIRE(ApproxEq(Su1_4point, Su1));
+    REQUIRE(isfinite_array(Su0_4point.data(), Su0_4point.size()));
+    REQUIRE(isfinite_array(Su1_4point.data(), Su1_4point.size()));
+    REQUIRE(isfinite_array(Su0.data(), Su0.size()));
+    REQUIRE(isfinite_array(Su1.data(), Su1.size()));
     std::fprintf(stderr, "\033[32;1m OK \033[0m\n");
   }
 
   // Test coefficients for boundary points
+  for (int n = 64; n <= n_lim; n*=2)
   {
-    std::fprintf(stderr, "Boundary values\t");
     const int k = 1;
-    const int n = 8;
-    const int iterations = 1;
+    const int iterations = 5;
+    std::fprintf(stderr, "Boundary values, n = %d\t", n);
 
     aligned_array<double> u0(n*n);
     span<double> Su0(u0);
@@ -148,11 +153,15 @@ int main()
     span<const double> Scoeff(coeff.data(), coeff.size());
 
     jacobi_2d(n, k, iterations, Su0, Su1, Scoeff);
-    for (size_t i = 0; i < n; ++i)
-      for (size_t j = 0; j < n; ++j)
+    bool zero_element = false;
+    for (int i = 0; i < n; ++i)
+      for (int j = 0; j < n; ++j)
         if (i == 0 || j == 0 || i == n-1 || j == n-1)
-          REQUIRE(Su1[INDEX(i, j, n)] != 0);
+          zero_element = Su1[INDEX(i, j, n)] == 0;
 
+    REQUIRE(zero_element == false);
+    REQUIRE(isfinite_array(Su0.data(), Su0.size()));
+    REQUIRE(isfinite_array(Su1.data(), Su1.size()));
     std::fprintf(stderr, "\033[32;1m OK \033[0m\n");
   }
 
@@ -163,7 +172,7 @@ int main()
     span<double> Su_unif(u_unif);
     unifrnd<double>(1, 10, Su_unif);
 
-    for (int k = 1; k <= k_lim; ++k)
+    for (int k = 1; k <= k_lim; k+=k_step)
     {
       std::fprintf(stderr, "Vanilla, n = %-4d, k = %-1d\t", n, k);
       aligned_array<double> coeff((2*k+1)*(2*k+1));
@@ -226,6 +235,6 @@ int main()
       }
     }
   }
-
+  std::printf("Ran %lu tests successfully\n", test_n);
   return 0;
 }
