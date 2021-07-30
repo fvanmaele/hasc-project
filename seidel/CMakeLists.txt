@@ -1,6 +1,8 @@
-add_library(seidel INTERFACE seidel.h)
+add_library(seidel INTERFACE)
 target_link_libraries(seidel INTERFACE
     OpenMP::OpenMP_CXX)
+target_sources(seidel INTERFACE 
+    seidel.h)
 
 add_executable(seidel_main main.cpp)
 target_link_libraries(seidel_main PRIVATE

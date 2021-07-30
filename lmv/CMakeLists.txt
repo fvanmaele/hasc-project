@@ -1,6 +1,8 @@
-add_library(lmv INTERFACE lmv_seq.h lmv_vcl.h)
+add_library(lmv INTERFACE)
 #target_link_libraries(lmv INTERFACE
 #    vectorclass::vectorclass)
+target_sources(lmv INTERFACE 
+    lmv_seq.h lmv_vcl.h)
 
 add_executable(lmv_main main.cpp)
 target_link_libraries(lmv_main PRIVATE

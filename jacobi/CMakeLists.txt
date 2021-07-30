@@ -1,6 +1,8 @@
-add_library(jacobi INTERFACE jacobi.h)
+add_library(jacobi INTERFACE)
 target_link_libraries(jacobi INTERFACE
     OpenMP::OpenMP_CXX)
+target_sources(jacobi INTERFACE 
+    jacobi.h)
 
 add_executable(jacobi_main main.cpp)
 target_link_libraries(jacobi_main PRIVATE
