@@ -18,7 +18,7 @@ The `benchmark` and `vectorclass` libraries are included as submodules. A
 system version of `benchmark` can be used to reduce compile times by setting
 the `OPT_USE_BUNDLED_BENCHMARK` option:
 ```
-  $ cmake -DOPT_USE_BUNDLED_BENCHMARK=OFF
+  $ cmake -DOPT_USE_BUNDLED_BENCHMARK=OFF ..
 ```
 
 ## Running the code

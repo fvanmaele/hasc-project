@@ -90,7 +90,9 @@ int main()
 
   // Test sequential version against 4-point stencil of lecture
   std::array<const double, 9> coeff_4point = {
-    0, 0.25, 0, 0.25, 0, 0.25, 0, 0.25, 0
+    0.0, 0.25, 0.0, 
+    0.25, 0.0, 0.25, 
+    0.0, 0.25, 0.0
   };
   span<const double> Scoeff_4point(coeff_4point);
 
