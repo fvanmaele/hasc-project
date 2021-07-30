@@ -90,12 +90,6 @@ endif()
 # Project
 include_directories(${CMAKE_SOURCE_DIR})
 
-add_library(utility INTERFACE)
-target_sources(utility INTERFACE 
-    simd_selector.h span.h aligned_array.h util.h)
-#target_link_libraries(utility INTERFACE
-#    vectorclass::vectorclass)
-
 add_subdirectory("lmv")
 add_subdirectory("jacobi")
 add_subdirectory("seidel")
